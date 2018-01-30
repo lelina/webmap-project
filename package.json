@@ -1,8 +1,10 @@
 {
   "dependencies": {
-    "express":"^4.16.2",
-    "ejs":"^2.5.7",
-    "pug":"^2.0.0-rc.4"
-
+    "ejs": "^2.5.7",
+    "express": "^4.16.2"
+  },
+  "devDependencies": {
+    "gulp": "^3.9.1",
+    "gulp-inject": "^4.3.0"
   }
 }
