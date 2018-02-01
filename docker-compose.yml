@@ -1,0 +1,13 @@
+version: "2"
+services:
+  green:
+    image: "node:8-alpine"
+    user: "node"
+    working_dir: /home/node/app
+    environment:
+      - NODE_ENV=production
+    volumes:
+      - ./:/home/node/app
+    ports:
+      - ${PORT}:8000
+    command: "npm start"
