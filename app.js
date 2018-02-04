@@ -7,7 +7,20 @@ app.set('views', './views')
 app.set('view engine', 'ejs')
 
 app.get('/', (req, res) => {
-  res.render('greeting')
+  let alertPanel = {
+    appearanceColor: function(){
+      if(this.futureRisk.isExisted ===false) return 'alert-panel--false'
+      else return 'alert-panel--true'
+    },
+    futureRisk: {
+      isExisted: true
+    },
+    date: new Date()
+
+  }
+  res.render('index', {
+    alertPanel: alertPanel
+  })
 })
 
 app.listen(8000, () => {
