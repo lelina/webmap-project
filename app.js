@@ -26,5 +26,5 @@ app.use(function(req, res, next) {
   res.status(404).render('404.ejs');
 });
 app.listen(8000, () => {
-  console.log('Server started')
+  console.log('Server started at http://localhost:8000')
 })
