@@ -18,24 +18,28 @@
     <!-- Custom CSS -->
     <link href="css/style.css" rel="stylesheet"/>
     <style>
+        div#survive_map {
+            height: 500px;
+        }
+
         .alert-panel {
             padding: 2rem 2rem;
-            }
+        }
         .alert-panel_icon {
             display: block;
             width: 5rem;
             height: auto;
             margin: 0 auto;
-            }
+        }
         .alert-panel--true {background-color: #ff3e38 }
         .alert-panel--false {background-color: gray}
         .info-panel {
             padding-left: 3rem;
             padding-right: 3rem;
-            }
+        }
         .info-panel_btn {
             display: block;
-            }
+        }
     </style>
 </head>
 
@@ -89,16 +93,17 @@
     </div>
 
     <div class="row mr-2 ml-2">
-    <!--<div class="col-md-4">
-        <h3>Description:</h3>
-        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur</p>
-    </div>-->
+        <!--<div class="col-md-4">
+            <h3>Description:</h3>
+            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur</p>
+        </div>-->
         <div class="col-md-12">
             <h2 class="text-center">VIEW MAP</h2>
             <div class="embed-container">
-                <iframe frameborder="0" scrolling="no" marginheight="0" marginwidth="0"
-                        title="Canterbury Tsunami Evacuation Zones"
-                        src="//www.arcgis.com/apps/Embed/index.html?webmap=5169f2952c504dc4b24bb4cced6afbd3&amp;extent=172.7386,-43.5772,172.7807,-43.5643&home=true&zoom=true&previewImage=false&scale=true&search=true&searchextent=true&details=true&legend=true&active_panel=legend&basemap_gallery=true&disable_scroll=true&theme=dark"></iframe>
+                <div id="survive_map"></div>
+                <!--<iframe frameborder="0" scrolling="no" marginheight="0" marginwidth="0"-->
+                        <!--title="Canterbury Tsunami Evacuation Zones"-->
+                        <!--src="//www.arcgis.com/apps/Embed/index.html?webmap=5169f2952c504dc4b24bb4cced6afbd3&amp;extent=172.7386,-43.5772,172.7807,-43.5643&home=true&zoom=true&previewImage=false&scale=true&search=true&searchextent=true&details=true&legend=true&active_panel=legend&basemap_gallery=true&disable_scroll=true&theme=dark"></iframe>-->
             </div>
         </div>
     </div>
@@ -122,10 +127,12 @@
 </footer>
 
 <!-- Bootstrap core JavaScript -->
-<script src="assets/jquery/jquery.min.js"></script>
-<script src="assets/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script src="assets/jquery/jquery.js"></script>
+<script src="assets/bootstrap/js/bootstrap.js"></script>
 
-
+<script>
+  loadMap()
+</script>
 
 </body>
 

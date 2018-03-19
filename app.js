@@ -29,6 +29,7 @@ app.use(passport.session())
 passport.use(new LocalStrategy(User.authenticate()))
 passport.serializeUser(User.serializeUser())
 passport.deserializeUser(User.deserializeUser())
+
 // ===========
 // ROUTES
 // ===========
@@ -56,15 +57,18 @@ app.get('/login', function(req, res) {
     currentUser: req.user
   })
 })
+
 app.post('/login', passport.authenticate('local', {
   successRedirect: '/',
   failureRedirect: '/login'
 }) ,function(req, res) {})
+
 app.get('/register', function(req, res) {
   res.render('signUpForm', {
     currentUser: req.user
   })
 })
+
 app.post('/register', function(req, res) {
   User.register(new User({username: req.body.username, email: req.body.email}), req.body.password, function(err, user) {
     if (err) {
@@ -76,16 +80,22 @@ app.post('/register', function(req, res) {
     })
   })
 })
+
 app.get('/logout', function(req, res) {
   req.logout()
   res.redirect('/')
+})
+
+app.get('/c', (req, res) => {
+  let coor = {x: 51.505, y: -0.09}
+  res.setHeader('Content-Type', 'application/json');
+  res.send(JSON.stringify(coor));
 })
 
 // 404 ROUTE
 app.use(function(req, res, next) {
   res.status(404).render('404.ejs');
 })
-
 
 app.listen(8000, () => {
   console.log('Server started at http://localhost:8000')
