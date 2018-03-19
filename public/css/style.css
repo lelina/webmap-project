@@ -5,28 +5,29 @@
  */
 
 body {
-		padding-top: 54px;
-		}
+  padding-top: 54px;
+}
 
 @media (min-width: 992px) {
-		body {
-				padding-top: 56px;
-				}
-		}
+  body {
+    padding-top: 56px;
+  }
+}
 
 .carousel-item {
-		height: 65vh;
-		min-height: 300px;
-		background: no-repeat center center scroll;
-		-webkit-background-size: cover;
-		-moz-background-size: cover;
-		-o-background-size: cover;
-		background-size: cover;
-		}
+  height: 65vh;
+  min-height: 300px;
+  background: no-repeat center center scroll;
+  -webkit-background-size: cover;
+  -moz-background-size: cover;
+  -o-background-size: cover;
+  background-size: cover;
+}
 
 .portfolio-item {
-		margin-bottom: 30px;
-		}
+  margin-bottom: 30px;
+}
+
 /*
 .embed-container {
 	position: relative;
@@ -43,17 +44,51 @@ body {
 }
 */
 .embed-container {
-		position: relative;
-		width: inherit;
-		height: 500px;
-		}
+  position: relative;
+  width: inherit;
+  height: 500px;
+}
+
 .embed-container iframe {
-		width: 100%;
-		height: 100%;
-		}
+  width: 100%;
+  height: 100%;
+}
+
 small {
-	position: absolute;
-	z-index: 40;
-	bottom: 0;
-	margin-bottom: -15px;
+  position: absolute;
+  z-index: 40;
+  bottom: 0;
+  margin-bottom: -15px;
+}
+
+div#survive_map {
+  height: 500px;
+}
+
+.alert-panel {
+  padding: 2rem 2rem;
+}
+
+.alert-panel_icon {
+  display: block;
+  width: 5rem;
+  height: auto;
+  margin: 0 auto;
+}
+
+.alert-panel--true {
+  background-color: #ff3e38
+}
+
+.alert-panel--false {
+  background-color: gray
+}
+
+.info-panel {
+  padding-left: 3rem;
+  padding-right: 3rem;
+}
+
+.info-panel_btn {
+  display: block;
 }

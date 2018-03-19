@@ -2,7 +2,6 @@
 <html lang="en">
 
 <head>
-
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta name="description" content="">
@@ -11,36 +10,19 @@
     <title>Tsunami Hazard Map</title>
 
     <!-- Bootstrap core CSS -->
-    <link href="assets/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="assets/bootstrap/css/bootstrap.css" rel="stylesheet">
+
+    <!--Leaflet CSS-->
+    <link rel="stylesheet" href="assets/leaflet/leaflet.css" />
+
     <!-- Font Awesome -->
     <link href="https://use.fontawesome.com/releases/v5.0.6/css/all.css" rel="stylesheet">
 
     <!-- Custom CSS -->
     <link href="css/style.css" rel="stylesheet"/>
-    <style>
-        div#survive_map {
-            height: 500px;
-        }
 
-        .alert-panel {
-            padding: 2rem 2rem;
-        }
-        .alert-panel_icon {
-            display: block;
-            width: 5rem;
-            height: auto;
-            margin: 0 auto;
-        }
-        .alert-panel--true {background-color: #ff3e38 }
-        .alert-panel--false {background-color: gray}
-        .info-panel {
-            padding-left: 3rem;
-            padding-right: 3rem;
-        }
-        .info-panel_btn {
-            display: block;
-        }
-    </style>
+    <!--manual script-->
+    <script src="assets/main.js"></script>
 </head>
 
 <body>
@@ -49,7 +31,10 @@
 <nav class="navbar fixed-top navbar-expand-lg navbar-dark bg-success fixed-top">
     <div class="container">
         <a class="navbar-brand" href="/">Tsunami Hazard Map</a>
-        <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+        <button class="navbar-toggler navbar-toggler-right" type="button"
+                data-toggle="collapse" data-target="#navbarResponsive"
+                aria-controls="navbarResponsive" aria-expanded="false"
+                aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarResponsive">
@@ -59,13 +44,15 @@
                 </li>
             </ul>
             <div class="navbar-nav ml-auto">
-                <%if (currentUser === undefined) {%>
-                <a class="btn btn-danger" style="margin: 0 0.5rem" href="/register" role="button">Sign Up</a>
-                <a class="btn btn-dark" style="margin: 0 0.5rem" href="/login" role="button">Sign In</a>
-                <%}
-                else {%>
-                Hello <%=currentUser.username%>
-                <%}%>
+                <% if (currentUser === undefined) { %>
+                <a class="btn btn-danger" style="margin: 0 0.5rem" href="/register"
+                   role="button">Sign Up</a>
+                <a class="btn btn-dark" style="margin: 0 0.5rem" href="/login"
+                   role="button">Sign In</a>
+                <% }
+                else { %>
+                Hello <%= currentUser.username %>
+                <% } %>
             </div>
         </div>
     </div>
@@ -75,20 +62,24 @@
 <div class="container-fluid">
 
     <div class="row mb-2">
-        <div class="col <%=alertPanel.appearanceColor()%> alert-panel js-alert-panel">
-            <h4 class="text-center"><%= alertPanel.date%></h4>
-            <% if (alertPanel.futureRisk.isExisted === false) {%>
+        <div class="col <%= alertPanel.appearanceColor() %> alert-panel js-alert-panel">
+            <h4 class="text-center"><%= alertPanel.date %></h4>
+            <% if (alertPanel.futureRisk.isExisted === false) { %>
             <div class="row">
-                <div class="col-md-3"><img class="alert-panel_icon" src="/img/index_relax-icon.png"/> </div>
-                <div class="col-md-9"><h2>Phew! No tsunami risk now. You can relax.</h2></div>
+                <div class="col-md-3"><img class="alert-panel_icon"
+                                           src="/img/index_relax-icon.png"/></div>
+                <div class="col-md-9"><h2>Phew! No tsunami risk now. You can relax.</h2>
+                </div>
             </div>
-            <%}
-            else {%>
+            <% }
+            else { %>
             <div class="row">
-                <div class="col-md-2"><img class="alert-panel_icon" src="/img/index_alert-icon.ico"/> </div>
-                <div class="col-md-10"><h2>Oh no! There are tsunami risks in this area. RUN!</h2></div>
+                <div class="col-md-2"><img class="alert-panel_icon"
+                                           src="/img/index_alert-icon.ico"/></div>
+                <div class="col-md-10"><h2>Oh no! There are tsunami risks in this area.
+                        RUN!</h2></div>
             </div>
-            <%}%>
+            <% } %>
         </div>
     </div>
 
@@ -102,16 +93,21 @@
             <div class="embed-container">
                 <div id="survive_map"></div>
                 <!--<iframe frameborder="0" scrolling="no" marginheight="0" marginwidth="0"-->
-                        <!--title="Canterbury Tsunami Evacuation Zones"-->
-                        <!--src="//www.arcgis.com/apps/Embed/index.html?webmap=5169f2952c504dc4b24bb4cced6afbd3&amp;extent=172.7386,-43.5772,172.7807,-43.5643&home=true&zoom=true&previewImage=false&scale=true&search=true&searchextent=true&details=true&legend=true&active_panel=legend&basemap_gallery=true&disable_scroll=true&theme=dark"></iframe>-->
+                <!--title="Canterbury Tsunami Evacuation Zones"-->
+                <!--src="//www.arcgis.com/apps/Embed/index.html?webmap=5169f2952c504dc4b24bb4cced6afbd3&amp;extent=172.7386,-43.5772,172.7807,-43.5643&home=true&zoom=true&previewImage=false&scale=true&search=true&searchextent=true&details=true&legend=true&active_panel=legend&basemap_gallery=true&disable_scroll=true&theme=dark"></iframe>-->
             </div>
         </div>
     </div>
 
     <div class="row mt-4 mb-3 info-panel">
         <h3>Features:</h3>
-        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur</p>
-        <a class="btn btn-success info-panel_btn js-info-panel_btn" href="/sign-up" role="button">Sign up for more features ></a>
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor
+            incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis
+            nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+            Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore
+            eu fugiat nulla pariatur</p>
+        <a class="btn btn-success info-panel_btn js-info-panel_btn" href="/sign-up"
+           role="button">Sign up for more features ></a>
     </div>
 </div>
 
@@ -129,6 +125,9 @@
 <!-- Bootstrap core JavaScript -->
 <script src="assets/jquery/jquery.js"></script>
 <script src="assets/bootstrap/js/bootstrap.js"></script>
+
+<!--leaflet-->
+<script src="assets/leaflet/leaflet.js"></script>
 
 <script>
   loadMap()
