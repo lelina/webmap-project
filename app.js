@@ -86,8 +86,9 @@ app.get('/logout', function(req, res) {
   res.redirect('/')
 })
 
-app.get('/c', (req, res) => {
-  let coor = {x: 51.505, y: -0.09}
+app.post('/c', (req, res) => {
+  let addr = req.body['address']; // TODO: from bodyparse
+  let coor = getGPSFromAddress(addr)
   res.setHeader('Content-Type', 'application/json');
   res.send(JSON.stringify(coor));
 })
@@ -100,3 +101,39 @@ app.use(function(req, res, next) {
 app.listen(8000, () => {
   console.log('Server started at http://localhost:8000')
 })
+
+
+function  getGPSFromAddress (addr) {
+  // TODO: find the first one that have address exists in...
+  let evac = {
+    forAddress: "160 Vu Pham Ham",
+    addressGPS: {
+      "x": 1580226.941789227770641,
+      "y": 5175819.710968014784157
+    },
+    length: 852.32928107600003,
+    points: [
+      {
+        "x": 1580226.941789227770641,
+        "y": 5175819.710968014784157
+      },
+      {
+        "x": 1580276.87980301422067,
+        "y": 5175879.636584554798901
+      },
+      {
+        "x": 1580286.867405767086893,
+        "y": 5175909.599392824806273
+      },
+      {
+        "x": 1580316.830214035930112,
+        "y": 5175949.549803851172328
+      },
+      {
+        "x": 1580321.824015416670591,
+        "y": 5175964.531207986176014
+      }
+    ]
+  };
+  return evac;
+}
