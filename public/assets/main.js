@@ -6,7 +6,7 @@ function loadMap () {
 
   let currentCoor =  ""; //getCurrentCoorFromBrowser();
   if (debug)
-    currentCoor = {addresss: "68 Nguyen Co Thach"};
+    currentCoor = {address: "68 Nguyen Co Thach"};
 
   $.post('/c', currentCoor, (data, status) => {
 
