@@ -106,7 +106,7 @@ app.listen(8000, () => {
 function  getGPSFromAddress (addr) {
   // TODO: find the first one that have address exists in...
   let evac = {
-    forAddress: "160 Vu Pham Ham",
+    forAddress: "44 TAYLORS MISTAKE BAY SUMNER",
     addressGPS: {
       "x": -43.57032122469974,
       "y": 172.755133778481479
@@ -137,3 +137,4 @@ function  getGPSFromAddress (addr) {
   };
   return evac;
 }
+
