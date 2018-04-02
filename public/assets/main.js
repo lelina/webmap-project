@@ -1,15 +1,43 @@
 const EVAC_OPTION_DRIVE = 'drive'
 const EVAC_OPTION_WALK = 'walk'
+const DEFAULT_ZOOM = 13
 const DEBUG = true
 
 function locateCurrentPossition () {
-  log('locateCurrentPossition')
-  let isSupportedBrowser = navigator.geolocation
-  if (isSupportedBrowser) {
-    navigator.geolocation.getCurrentPosition(getEvacFromCurrentPosition)
-  } else {
-    alert('Geolocation is not supported by this browser.')
+  // log('locateCurrentPossition')
+  // let isSupportedBrowser = navigator.geolocation
+  // if (isSupportedBrowser) {
+  //   navigator.geolocation.getCurrentPosition(getEvacFromCurrentPosition)
+  // } else {
+  //   alert('Geolocation is not supported by this browser.')
+  // }
+
+  var map = L.map('survive_map').locate({setView: true, maxZoom: DEFAULT_ZOOM});
+
+  googleStreets = L.tileLayer('http://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}',{
+    maxZoom: 20,
+    subdomains:['mt0','mt1','mt2','mt3']
+  }).addTo(map);
+
+
+
+  map.locate({setView: true,
+    maxZoom: 16,
+    watch:true,
+    timeout: 60000
+  });
+
+  function onLocationFound(e) {
+    var radius = e.accuracy / 2;
+    L.marker(e.latlng).addTo(map)
+      .bindPopup("You are within " + radius + " meters from this point").openPopup();
+    L.circle(e.latlng, radius).addTo(map);
+
+    //TODO: getEvacFromCurrentPosition
   }
+
+  map.on('locationfound', onLocationFound);
+
 }
 
 function locateBySearchResult () {
@@ -24,10 +52,13 @@ function alert(msg) {
   alert(msg)
 }
 
-function getEvacFromCurrentPosition (coordinate) {
-  $.post('/evac', coordinate, (evac, status) => {
-    if (status != 'success') return
-    drawEvac(evac)
+function getEvacFromCurrentPosition (leafletCoordinat) {
+  $.post('/evac', leafletCoordinat, (evac, status) => {
+    if (status != 'success') {
+      alert('chung toi khong biet duong chay nao cho ban')
+    } else {
+      drawEvac(evac)
+    }
   })
 }
 
@@ -43,7 +74,6 @@ function getEvacFromId (evacId) {
 }
 
 function drawEvac (evac) {
-  const DEFAULT_ZOOM = 13
   let zoom = DEFAULT_ZOOM
 
   let map = L.map('survive_map').setView([evac.addressGPS.x, evac.addressGPS.y], zoom)
