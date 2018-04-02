@@ -86,9 +86,15 @@ app.get('/logout', function(req, res) {
   res.redirect('/')
 })
 
-app.post('/c', (req, res) => {
+app.post('/evac/:evacId', (req, res) => {
+  let coor = getEvac(req.params['evacId'])
+  res.setHeader('Content-Type', 'application/json');
+  res.send(JSON.stringify(coor));
+})
+
+app.post('/evac', (req, res) => {
   let addr = req.body['address']; // TODO: from bodyparse
-  let coor = getGPSFromAddress(addr)
+  let coor = getFaker(addr)
   res.setHeader('Content-Type', 'application/json');
   res.send(JSON.stringify(coor));
 })
@@ -103,37 +109,60 @@ app.listen(8000, () => {
 })
 
 
-function  getGPSFromAddress (addr) {
+function getEvac(evacId) {
+  return getFaker()
+}
+
+function  getFaker (addr) {
   // TODO: find the first one that have address exists in...
   let evac = {
-    forAddress: "44 TAYLORS MISTAKE BAY SUMNER",
+    forAddress: '44 TAYLORS MISTAKE BAY SUMNER',
     addressGPS: {
-      "x": -43.57032122469974,
-      "y": 172.755133778481479
+      'x': -43.57032122469974,
+      'y': 172.755133778481479
     },
     length: 852.32928107600003,
-    points: [
+    drive: [
       {
-        "x": -43.569782970819006,
-        "y": 172.755754377317913
+        'x': -43.569782970819006,
+        'y': 172.755754377317913
       },
       {
-        "x": -43.569513446600467,
-        "y": 172.755879149539425
+        'x': -43.569513446600467,
+        'y': 172.755879149539425
       },
       {
-        "x": -43.569154520403075,
-        "y":172.756251646261802
+        'x': -43.569154520403075,
+        'y': 172.756251646261802
       },
       {
-        "x": -43.569019758022392,
-        "y": 172.756314030749905
+        'x': -43.569019758022392,
+        'y': 172.756314030749905
       },
       {
-        "x": -43.571707209562284,
-        "y": 172.762023746341612,
+        'x': -43.571707209562284,
+        'y': 172.762023746341612,
       }
-    ]
+    ],
+    driveTimeEstimated: 30,
+    walk: [
+      {
+        'x': -43.569154520403075,
+        'y': 172.756251646261802
+      },
+      {
+        'x': -43.569019758022395,
+        'y': 172.756314030749902
+      },
+      {
+        'x': -43.571707209562287,
+        'y': 172.762023746341609,
+      },
+      {
+        'x': -43.571707209562284,
+        'y': 172.762023746341612,
+      }]
+
   };
   return evac;
 }

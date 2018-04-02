@@ -8,7 +8,9 @@ let evacSchema = mongoose.Schema({
       y: Number
     },
   length: Number,
-  points: [{x: Number, y: Number}]
+  drive: [{x: Number, y: Number}],
+  driveTimeEstimated: Number,
+  walk: [{x: Number, y: Number}]
 })
 
 module.exports = mongoose.model('Evac', evacSchema)

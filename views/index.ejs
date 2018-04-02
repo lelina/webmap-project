@@ -112,6 +112,10 @@
 </div>
 
 
+<input type="button" id="navigationLocator" value="Locate" >
+<input type="button" id="onSearchLocator" value="Search Adress" >
+
+
 <!-- /.container -->
 
 <!-- Footer -->
@@ -130,7 +134,8 @@
 <script src="assets/leaflet/leaflet.js"></script>
 <script src="../src/leaflet-search.js"></script>
 <script>
-  loadMap()
+  $("#navigationLocator").click(locateCurrentPossition)
+  $("#onSearchLocator").click(locateBySearchResult)
 </script>
 
 </body>
