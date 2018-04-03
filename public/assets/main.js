@@ -7,6 +7,7 @@ function inundationMap(){
   if (DEBUG) console.log('loading map')
 
   $.get('/', {address: ''}, (data, status) => {
+    if (status != 'success') return
     let coord=data
   let map = L.map('survive_map').setView([coord.x, coord.y], DEFAULT_ZOOM);
   if (DEBUG) console.log('loading tile at [' + coord.x + ', ' + coord.y + ']')
