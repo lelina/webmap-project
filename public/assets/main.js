@@ -2,6 +2,48 @@ const EVAC_OPTION_DRIVE = 'drive'
 const EVAC_OPTION_WALK = 'walk'
 const DEFAULT_ZOOM = 13
 const DEBUG = true
+function inundationMap(){
+  'use strict'
+  if (DEBUG) console.log('loading map')
+
+  $.get('/', {address: ''}, (data, status) => {
+    let coord=data
+  let map = L.map('survive_map').setView([coord.x, coord.y], DEFAULT_ZOOM);
+  if (DEBUG) console.log('loading tile at [' + coord.x + ', ' + coord.y + ']')
+  let urlTemplate = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
+  let tileLayerOptions = {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    maxZoom: 18
+  }
+  })
+  L.tileLayer(urlTemplate, tileLayerOptions).addTo(map)
+  let inundation = [{
+    "type": "FeatureCollection",
+    "name": "inundationPolygonGeo",
+    "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" },
+    "geometry":{
+      "type": "MultiPolygon",
+      "coordinate": [
+        [ -43.357085036152675, 172.711975524769542 ],
+        [ -43.35708441435419, 172.71172872023115  ],
+        [ -43.356994370230474 ,172.711729146488977 ],
+        [ -43.35699561329097, 172.712222754843822 ],
+        [-43.357085657418587,  172.712222329315864],
+        [ -43.357085036152675, 172.711975524769542 ]
+      ]
+    }
+  }]
+  let inundationStyle={
+    "color": "#0000ff",
+    "opacity": 0.65
+  }
+
+  new L.GeoJSON(inundation, {
+    style: inundationStyle
+  }).addTo(map);
+}
+
+
 
 function locateCurrentPossition () {
   // log('locateCurrentPossition')
@@ -12,14 +54,12 @@ function locateCurrentPossition () {
   //   alert('Geolocation is not supported by this browser.')
   // }
 
-  var map = L.map('survive_map').locate({setView: true, maxZoom: DEFAULT_ZOOM});
+  let map = L.map('survive_map').locate({setView: true, maxZoom: DEFAULT_ZOOM});
 
   googleStreets = L.tileLayer('http://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}',{
     maxZoom: 20,
     subdomains:['mt0','mt1','mt2','mt3']
   }).addTo(map);
-
-
 
   map.locate({setView: true,
     maxZoom: 16,
@@ -28,7 +68,7 @@ function locateCurrentPossition () {
   });
 
   function onLocationFound(e) {
-    var radius = e.accuracy / 2;
+    let radius = e.accuracy / 2;
     L.marker(e.latlng).addTo(map)
       .bindPopup("You are within " + radius + " meters from this point").openPopup();
     L.circle(e.latlng, radius).addTo(map);
@@ -120,7 +160,7 @@ function drawEvac (evac) {
   let redAlert = L.circle([evacLineCoor.x, evacLineCoor.y], redAlertStyle)
     .addTo(map)
 
-  var yellowAlertCoors = [{x: 51.509, y: -0.08}, {x: 51.503, y: -0.06}, {
+  let yellowAlertCoors = [{x: 51.509, y: -0.08}, {x: 51.503, y: -0.06}, {
     x: 51.51,
     y: -0.047
   }]
@@ -143,7 +183,7 @@ function drawEvac (evac) {
 function drawPolyLine (points, map) {
   let lats = points.map(point => new L.LatLng(point.x, point.y))
 
-  var firstpolyline = new L.Polyline(lats, {
+  let firstpolyline = new L.Polyline(lats, {
     color: 'red',
     weight: 3,
     opacity: 0.5,
@@ -152,8 +192,8 @@ function drawPolyLine (points, map) {
   firstpolyline.addTo(map)
 }
 
-function searchAdd (feature, map) {
-  var featuresLayer = new L.GeoJSON(data, {
+searchAddfunction searchAdd (feature, map) {
+  let featuresLayer = new L.GeoJSON(data, {
     style: function (feature) {
       return {color: feature.properties.color}
     },
@@ -164,13 +204,13 @@ function searchAdd (feature, map) {
 }
 
 // map.addLayer(featuresLayer)
-// var searchControl = new L.Control.Search({
+// let searchControl = new L.Control.Search({
 //   layer: featuresLayer,
 //   propertyName: 'name',
 //   marker: false,
 //   moveToLocation: function (latlng, title, map) {
 //     //map.fitBounds( latlng.layer.getBounds() );
-//     var zoom = map.getBoundsZoom(latlng.layer.getBounds())
+//     let zoom = map.getBoundsZoom(latlng.layer.getBounds())
 //     map.setView(latlng, zoom) // access the zoom
 //   }
 // })

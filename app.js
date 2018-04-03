@@ -99,6 +99,12 @@ app.post('/evac', (req, res) => {
   res.send(JSON.stringify(coor));
 })
 
+app.get('/', (req, res) => {
+  let coord = {x: -43.57032122469974, y: 172.755133778481479}
+  res.setHeader('Content-Type', 'application/json');
+  res.send(JSON.stringify(coord));
+})
+
 // 404 ROUTE
 app.use(function(req, res, next) {
   res.status(404).render('404.ejs');
@@ -109,12 +115,17 @@ app.listen(8000, () => {
 })
 
 
+function inundationMap(){
+  'use strict'
+  return map
+}
+
 function getEvac(evacId) {
   return getFaker()
 }
 
 function  getFaker (addr) {
-  // TODO: find the first one that have address exists in...
+  // TODO: find the first one that has address exists in...
   let evac = {
     forAddress: '44 TAYLORS MISTAKE BAY SUMNER',
     addressGPS: {
@@ -166,4 +177,5 @@ function  getFaker (addr) {
   };
   return evac;
 }
+
 
