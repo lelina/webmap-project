@@ -3,25 +3,17 @@ const EVAC_OPTION_WALK = 'walk'
 const DEFAULT_ZOOM = 13
 const DEBUG = true
 function inundationMap(){
-  'use strict'
-  if (DEBUG) console.log('loading map')
-
-  $.get('/', {address: ''}, (data, status) => {
-    if (status != 'success') return
-    let coord=data
-  let map = L.map('survive_map').setView([coord.x, coord.y], DEFAULT_ZOOM);
-  if (DEBUG) console.log('loading tile at [' + coord.x + ', ' + coord.y + ']')
+  var map = L.map('survive_map').setView([-43.57032122469974, 172.755133778481479], DEFAULT_ZOOM);
+  if (DEBUG) console.log('loading tile at [' + -43.57032122469974 + ', ' + 172.755133778481479 + ']')
   let urlTemplate = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
   let tileLayerOptions = {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
     maxZoom: 18
   }
-  })
   L.tileLayer(urlTemplate, tileLayerOptions).addTo(map)
   let inundation = [{
     "type": "FeatureCollection",
     "name": "inundationPolygonGeo",
-    "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" },
     "geometry":{
       "type": "MultiPolygon",
       "coordinate": [
@@ -30,7 +22,7 @@ function inundationMap(){
         [ -43.356994370230474 ,172.711729146488977 ],
         [ -43.35699561329097, 172.712222754843822 ],
         [-43.357085657418587,  172.712222329315864],
-        [ -43.357085036152675, 172.711975524769542 ]
+        [-43.357085036152675, 172.711975524769542 ]
       ]
     }
   }]
@@ -38,7 +30,6 @@ function inundationMap(){
     "color": "#0000ff",
     "opacity": 0.65
   }
-
   new L.GeoJSON(inundation, {
     style: inundationStyle
   }).addTo(map);

@@ -92,3 +92,8 @@ div#survive_map {
 .info-panel_btn {
   display: block;
 }
+
+#autocomplete {
+  z-index: 100;
+  margin-bottom: 5px;
+}
