@@ -1,74 +1,90 @@
+'use strict'
+
+const DEBUG = true
+
 const EVAC_OPTION_DRIVE = 'drive'
 const EVAC_OPTION_WALK = 'walk'
+
 const DEFAULT_ZOOM = 13
-const DEBUG = true
-function inundationMap(){
-  var map = L.map('survive_map').setView([-43.57032122469974, 172.755133778481479], DEFAULT_ZOOM);
-  if (DEBUG) console.log('loading tile at [' + -43.57032122469974 + ', ' + 172.755133778481479 + ']')
-  let urlTemplate = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
-  let tileLayerOptions = {
+const DEFAULT_LOCATION = {lat: -43.57032122469974, lng: 172.755133778481479}
+const OPENSTREET_TEMPLATE = {
+  URL: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+  OPTIONS: {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-    maxZoom: 18
+    maxZoom: 20
   }
-  L.tileLayer(urlTemplate, tileLayerOptions).addTo(map)
-  let inundation = [{
-    "type": "FeatureCollection",
-    "name": "inundationPolygonGeo",
-    "geometry":{
-      "type": "MultiPolygon",
-      "coordinate": [
-        [ -43.357085036152675, 172.711975524769542 ],
-        [ -43.35708441435419, 172.71172872023115  ],
-        [ -43.356994370230474 ,172.711729146488977 ],
-        [ -43.35699561329097, 172.712222754843822 ],
-        [-43.357085657418587,  172.712222329315864],
-        [-43.357085036152675, 172.711975524769542 ]
-      ]
-    }
-  }]
-  let inundationStyle={
-    "color": "#0000ff",
-    "opacity": 0.65
-  }
-  new L.GeoJSON(inundation, {
-    style: inundationStyle
-  }).addTo(map);
 }
 
+const GOOGLESTREET_TEMPLATE = {
+  URL: 'http://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}',
+  OPTIONS: {
+    maxZoom: 20,
+    subdomains: ['mt0', 'mt1', 'mt2', 'mt3']
+  }
+}
 
+const INUNDATION_DATA = [
+  [-43.357085036152675, 172.711975524769542],
+  [-43.35708441435419, 172.71172872023115],
+  [-43.356994370230474, 172.711729146488977],
+  [-43.35699561329097, 172.712222754843822],
+  [-43.357085657418587, 172.712222329315864],
+  [-43.357085036152675, 172.711975524769542]
+]
+
+const INUNDATION_OPTIONS = {
+  style: {
+    'color': '#0000ff',
+    'opacity': 0.65
+  }
+}
+
+let _map
+
+let mapInstance = function () {
+  if (!_map) {
+    _map = L.map('survive_map')
+    log('map initialized')
+  }
+  return _map
+}
+
+function initializeMap () {
+}
+
+function loadInundationMap () {
+  mapInstance().setView(DEFAULT_LOCATION, DEFAULT_ZOOM)
+  log('map initialized with default view and options')
+
+  L.tileLayer(OPENSTREET_TEMPLATE.URL, OPENSTREET_TEMPLATE.OPTIONS).addTo(mapInstance())
+  log('loaded tile at [' + DEFAULT_LOCATION.lat + ', ' + DEFAULT_LOCATION.lng + ']')
+
+  new L.GeoJSON(INUNDATION_DATA, INUNDATION_OPTIONS).addTo(mapInstance())
+  log('loaded inundation data')
+}
 
 function locateCurrentPossition () {
-  // log('locateCurrentPossition')
-  // let isSupportedBrowser = navigator.geolocation
-  // if (isSupportedBrowser) {
-  //   navigator.geolocation.getCurrentPosition(getEvacFromCurrentPosition)
-  // } else {
-  //   alert('Geolocation is not supported by this browser.')
-  // }
+  mapInstance().locate({setView: true, maxZoom: DEFAULT_ZOOM})
 
-  let map = L.map('survive_map').locate({setView: true, maxZoom: DEFAULT_ZOOM});
+  L.tileLayer(GOOGLESTREET_TEMPLATE.URL, GOOGLESTREET_TEMPLATE.OPTIONS).addTo(mapInstance())
 
-  googleStreets = L.tileLayer('http://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}',{
-    maxZoom: 20,
-    subdomains:['mt0','mt1','mt2','mt3']
-  }).addTo(map);
-
-  map.locate({setView: true,
+  mapInstance().locate({
+    setView: true,
     maxZoom: 16,
-    watch:true,
+    watch: true,
     timeout: 60000
-  });
+  })
 
-  function onLocationFound(e) {
-    let radius = e.accuracy / 2;
-    L.marker(e.latlng).addTo(map)
-      .bindPopup("You are within " + radius + " meters from this point").openPopup();
-    L.circle(e.latlng, radius).addTo(map);
+  function onLocationFound (e) {
+    let radius = e.accuracy / 2
+    L.marker(e.latlng).addTo(mapInstance())
+      .bindPopup('You are within ' + radius + ' meters from this point').openPopup()
+    L.circle(e.latlng, radius).addTo(mapInstance())
 
     //TODO: getEvacFromCurrentPosition
   }
 
-  map.on('locationfound', onLocationFound);
+  mapInstance().on('locationfound', onLocationFound)
 
 }
 
@@ -77,10 +93,10 @@ function locateBySearchResult () {
 }
 
 function log (msg) {
-  console.log(msg)
+  if (DEBUG) console.log(msg)
 }
 
-function alert(msg) {
+function alert (msg) {
   alert(msg)
 }
 
@@ -108,15 +124,15 @@ function getEvacFromId (evacId) {
 function drawEvac (evac) {
   let zoom = DEFAULT_ZOOM
 
-  let map = L.map('survive_map').setView([evac.addressGPS.x, evac.addressGPS.y], zoom)
+  mapInstance().setView([evac.addressGPS.x, evac.addressGPS.y], zoom)
 
   let evacOption = EVAC_OPTION_DRIVE
   if (evacOption === EVAC_OPTION_DRIVE) {
-    drawPolyLine(evac.drive, map)
+    drawPolyLine(evac.drive, mapInstance())
     // TODO: showEvactimeEstimated(evac.driveTimeEstimated)
   }
   else {
-    drawPolyLine(evac.walk, map)
+    drawPolyLine(evac.walk, mapInstance())
     // TODO: showEvactimeEstimated(estimateWalkEvacTime(evac.walk, ))
 
   }
@@ -132,10 +148,10 @@ function drawEvac (evac) {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
     maxZoom: 18
   }
-  L.tileLayer(urlTemplate, tileLayerOptions).addTo(map)
+  L.tileLayer(urlTemplate, tileLayerOptions).addTo(mapInstance())
 
   L.marker([evac.x, evac.y])
-    .addTo(map)
+    .addTo(mapInstance())
     .bindPopup('A pretty CSS3 popup.<br> Easily customizable.')
     .openPopup()
 
@@ -148,9 +164,9 @@ function drawEvac (evac) {
   }
   //circle change to line
   let evacLine = L.polyline([evacLineCoor.x, evacLineCoor.y], evacLineStyle)
-    .addto(map)
+    .addto(mapInstance())
   let redAlert = L.circle([evacLineCoor.x, evacLineCoor.y], redAlertStyle)
-    .addTo(map)
+    .addTo(mapInstance())
 
   let yellowAlertCoors = [{x: 51.509, y: -0.08}, {x: 51.503, y: -0.06}, {
     x: 51.51,
@@ -163,13 +179,13 @@ function drawEvac (evac) {
     radius: 500
   }
 
-  // giải thích về `yellowAlertCoors.map(coor => [coor.x, coor.y]`: map() là phương thức của các đối tượng
+  // giải thích về `yellowAlertCoors.map(coor => [coor.x, coor.y]`: L.mapInstance() là phương thức của các đối tượng
   // mảng, phương thức này trả về một mảng có độ dài tương đương với mảng cũ, bằng cách "convert" mỗi
   // phần tử của mảng cũ thành một phần tử mới, theo cách được mô tả trong tham số của nó:
   // yellowAlertCoors.map(function(coor) { return [coor.x, coor.y] })
   //
   // đoạn `function(coor) { return [coor.x, coor.y] }` có thể được viết tắt như dưới đây
-  let yellowAlert = L.polygon(yellowAlertCoors.map(coor => [coor.x, coor.y]), yellowAlertStyle).addTo(map)
+  let yellowAlert = L.polygon(yellowAlertCoors.map(coor => [coor.x, coor.y]), yellowAlertStyle).addTo(mapInstance())
 }
 
 function drawPolyLine (points, map) {
@@ -184,7 +200,7 @@ function drawPolyLine (points, map) {
   firstpolyline.addTo(map)
 }
 
-searchAddfunction searchAdd (feature, map) {
+function searchAdd (feature, map) {
   let featuresLayer = new L.GeoJSON(data, {
     style: function (feature) {
       return {color: feature.properties.color}

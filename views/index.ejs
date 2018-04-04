@@ -142,7 +142,8 @@
         crossorigin=""></script>
 <!--<script src="../src/leaflet-search.js"></script>-->
 <script>
-  inundationMap ()
+  $(loadInundationMap ()) // load innundation map when page is ready
+
   $("#navigationLocator").click(locateCurrentPossition)
   $("#onSearchLocator").click(locateBySearchResult)
 </script>
