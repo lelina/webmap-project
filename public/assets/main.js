@@ -6,7 +6,7 @@ const EVAC_OPTION_DRIVE = 'drive'
 const EVAC_OPTION_WALK = 'walk'
 
 const DEFAULT_ZOOM = 15
-const DEFAULT_LOCATION = {lat: -43.57032122469974, lng: 172.755133778481479}
+const DEFAULT_LOCATION = {lat: -43.57643167342933, lng: 172.76022442275394}
 const OPENSTREET_TEMPLATE = {
   URL: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
   OPTIONS: {
@@ -65,11 +65,16 @@ function mapInstance () {
 
 function inundationLayer () {
   if (!_inundation) {
-    _inundation = new L.GeoJSON(INUNDATION_DATA, INUNDATION_OPTIONS)
-    log('minundationLayer initialized')
+    _inundation = $.getJSON("G:/inundationSinglePolygon.geojson", function (data) {
+      // var actual_JSON = JSON.parse(data);
+      console.log("data", data);
+      new L.GeoJSON(data.features, INUNDATION_OPTIONS).addTo(mapInstance());
+      log('inundationLayer initialized');
+    })
+    return _inundation
   }
-  return _inundation
 }
+
 
 function baseMapLayer () {
   return openstreetLayer()
