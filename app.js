@@ -34,21 +34,7 @@ passport.deserializeUser(User.deserializeUser())
 // ROUTES
 // ===========
 app.get('/', (req, res) => {
-  let alertPanel = {
-    appearanceColor: function(){
-      if(this.futureRisk.isExisted ===false) return 'alert-panel--false'
-      else return 'alert-panel--true'
-    },
-    futureRisk: {
-      isExisted: false
-    },
-    date: new Date()
-
-  }
-  res.render('index', {
-    alertPanel: alertPanel,
-    currentUser: req.user
-  })
+  res.render('index')
 })
 
 // AUTHENTICATION ROUTES
