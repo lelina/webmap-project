@@ -153,7 +153,7 @@ function alert (msg) {
 function getEvacFromCurrentPosition (leafletCoordinat) {
   $.post('/evac', leafletCoordinat, (evac, status) => {
     if (status != 'success') {
-      alert('chung toi khong biet duong chay nao cho ban')
+      alert('We have no route to show you')
     } else {
       drawEvac(evac)
     }
@@ -171,6 +171,8 @@ function getEvacFromId (evacId) {
   })
 }
 
+
+
 function drawEvac (evac) {
   let zoom = DEFAULT_ZOOM
 
@@ -187,7 +189,133 @@ function drawEvac (evac) {
 
   }
 
-  // tham số đầu là url template, thằng Leaf sẽ tự thay `Zoom` vào {z}, kinh độ vĩ
+
+  // Set style function that sets fill color property
+  function evacLinestyle(feature) {
+    return {
+      color: 'green',
+      weight: 2,
+      opacity: 1,
+    };
+
+    var url = "G:/inundationSinglePolygon.geojson"
+    var arr=[]
+    var arr1=[]
+    var evacWalkLayer = L.geoJson(null, {onEachFeature: forEachFeature, style: evacLinestyle});
+
+    $.getJSON(url, function(data) {
+      evacWalkLayer.addData(data);
+
+      for (i = 0; i < data.features.length; i++) {  //loads Add into an Array for searching
+        arr1.push({label:data.features[i].properties.FULLADD, value:""});
+      }
+      addDataToAutocomplete(arr1);  //passes array for sorting and to load search control.
+    });
+
+
+    function forEachFeature(feature, layer) {
+      // Tagging each evac line with their address for the search control.
+      layer._leaflet_id = feature.properties.FULLADD;
+
+      var popupContent = "<p><b>Full Adress: </b>"+ feature.properties.FULLADD +
+        "</br>POSTCODE: "+ feature.properties.POSTCODE +
+        "</br>LENGTH (m): "+ feature.properties.LENGTH_GEO </p>";
+
+      layer.bindPopup(popupContent);
+    }
+
+    function addDataToAutocomplete(arr) {
+
+      arr.sort(function(a, b){ // sort object by Add
+        var nameA=a.label, nameB=b.label
+        if (nameA < nameB) //sort string ascending
+          return -1
+        if (nameA > nameB)
+          return 1
+        return 0 //default return value (no sorting)
+      })
+
+      // The source for autocomplete.  https://api.jqueryui.com/autocomplete/#method-option
+      $( "#autocomplete" ).autocomplete("option", "https://api.jqueryui.com/autocomplete/#method-option", arr);
+
+      $( "#autocomplete" ).on( "autocompleteselect", function( event, ui ) {
+        evacLineSelect(ui.item.label);  //grabs evacline corresponding to selected address
+        ui.item.value='';
+      });
+    }	///////////// Autocomplete search end
+
+// fire off click event and zoom to evacLine
+    function evacLineSelect(a){
+      map._layers[a].fire('click');  // 'clicks' on evac lines from search
+      var layer = map._layers[a];
+      map.fitBounds(layer.getBounds());  // zooms to selected line
+    }
+// END...fire off click event and zoom to evac line
+
+// Set style function that sets fill color property
+    function evacLinestyle(feature) {
+      return {
+        color: 'green',
+        weight: 2,
+        opacity: 1,
+      };
+
+      var url = "G:/inundationSinglePolygon.geojson"
+      var arr=[]
+      var arr1=[]
+      var evacWalkLayer = L.geoJson(null, {onEachFeature: forEachFeature, style: evacLinestyle});
+
+      $.getJSON(url, function(data) {
+        evacWalkLayer.addData(data);
+
+        for (i = 0; i < data.features.length; i++) {  //loads Add into an Array for searching
+          arr1.push({label:data.features[i].properties.FULLADD, value:""});
+        }
+        addDataToAutocomplete(arr1);  //passes array for sorting and to load search control.
+      });
+
+
+      function forEachFeature(feature, layer) {
+        // Tagging each evac line with their address for the search control.
+        layer._leaflet_id = feature.properties.FULLADD;
+
+        var popupContent = "<p><b>Full Adress: </b>"+ feature.properties.FULLADD +
+          "</br>POSTCODE: "+ feature.properties.POSTCODE +
+          "</br>LENGTH (m): "+ feature.properties.LENGTH_GEO </p>";
+
+        layer.bindPopup(popupContent);
+      }
+
+      function addDataToAutocomplete(arr) {
+
+        arr.sort(function(a, b){ // sort object by Name
+          var nameA=a.label, nameB=b.label
+          if (nameA < nameB) //sort string ascending
+            return -1
+          if (nameA > nameB)
+            return 1
+          return 0 //default return value (no sorting)
+        })
+
+        // The source for autocomplete.  https://api.jqueryui.com/autocomplete/#method-option
+        $( "#autocomplete" ).autocomplete("option", "https://api.jqueryui.com/autocomplete/#method-option", arr);
+
+        $( "#autocomplete" ).on( "autocompleteselect", function( event, ui ) {
+          evacLineSelect(ui.item.label);  //grabs evacline corresponding to selected address
+          ui.item.value='';
+        });
+      }	///////////// Autocomplete search end
+
+// fire off click event and zoom to evacLine
+      function evacLineSelect(a){
+        map._layers[a].fire('click');  // 'clicks' on evac lines from search
+        var layer = map._layers[a];
+        map.fitBounds(layer.getBounds());  // zooms to selected line
+      }
+// END...fire off click event and zoom to evac line
+
+
+      // tham số đầu là url template, thằng Leaf sẽ tự thay `Zoom` vào {z}, kinh độ vĩ
   // độ vào {x} và {y}, {s} thì có thể ko cần quan tâm, nhưng từ những tham số đó nó sẽ lấy dc các tấm ảnh bản đồ và "lát" vào div,
   // mỗi khi các tham số thay đổi thì nó lấy lại các ảnh khác
   //
