@@ -10,6 +10,7 @@ let User = require('./models/User')
 // CONNECT MONGODB
 let url = 'mongodb://binhsonnguyen.com:8000/linalan'
 mongoose.connect(url)
+
 //SETTINGS
 app.use(express.static(__dirname + '/public'))
 

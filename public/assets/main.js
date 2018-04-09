@@ -65,14 +65,10 @@ function mapInstance () {
 
 function inundationLayer () {
   if (!_inundation) {
-    _inundation = $.getJSON("G:/inundationSinglePolygon.geojson", function (data) {
-      // var actual_JSON = JSON.parse(data);
-      console.log("data", data);
-      new L.GeoJSON(data.features, INUNDATION_OPTIONS).addTo(mapInstance());
-      log('inundationLayer initialized');
-    })
-    return _inundation
+    _inundation = new L.GeoJSON(INUNDATION_DATA, INUNDATION_OPTIONS)
+    log('minundationLayer initialized')
   }
+  return _inundation
 }
 
 
@@ -150,6 +146,83 @@ function alert (msg) {
   alert(msg)
 }
 
+// use places.js to search
+(function searchAuto() {
+  var placesAutocomplete = places({
+    container: document.querySelector('#input-map')
+  });
+
+  var map = L.map('survive_map', {
+    scrollWheelZoom: false,
+    zoomControl: false
+  });
+
+  placesAutocomplete.on('suggestions', handleOnSuggestions);
+  placesAutocomplete.on('cursorchanged', handleOnCursorchanged);
+  placesAutocomplete.on('change', handleOnChange);
+  placesAutocomplete.on('clear', handleOnClear);
+
+  var markers = [];
+  function handleOnSuggestions(e) {
+    markers.forEach(removeMarker);
+    markers = [];
+
+    if (e.suggestions.length === 0) {
+      map.setView(DEFAULT_LOCATION, DEFAULT_ZOOM);
+      return;
+    }
+
+    e.suggestions.forEach(addMarker);
+    findBestZoom();
+  }
+
+  function handleOnChange(e) {
+    markers
+      .forEach(function(marker, markerIndex) {
+        if (markerIndex === e.suggestionIndex) {
+          markers = [marker];
+          marker.setOpacity(1);
+          findBestZoom();
+        } else {
+          removeMarker(marker);
+        }
+      });
+  }
+
+  function handleOnClear() {
+    map.setView(DEFAULT_LOCATION, DEFAULT_ZOOM);
+    markers.forEach(removeMarker);
+  }
+
+  function handleOnCursorchanged(e) {
+    markers
+      .forEach(function(marker, markerIndex) {
+        if (markerIndex === e.suggestionIndex) {
+          marker.setOpacity(1);
+          marker.setZIndexOffset(1000);
+        } else {
+          marker.setZIndexOffset(0);
+          marker.setOpacity(0.5);
+        }
+      });
+  }
+
+  function addMarker(suggestion) {
+    var marker = L.marker(suggestion.latlng, {opacity: .4});
+    marker.addTo(map);
+    markers.push(marker);
+  }
+
+  function removeMarker(marker) {
+    map.removeLayer(marker);
+  }
+
+  function findBestZoom() {
+    var featureGroup = L.featureGroup(markers);
+    map.fitBounds(featureGroup.getBounds().pad(0.5), {animate: false});
+  }
+})();
+
 function getEvacFromCurrentPosition (leafletCoordinat) {
   $.post('/evac', leafletCoordinat, (evac, status) => {
     if (status != 'success') {
@@ -188,131 +261,6 @@ function drawEvac (evac) {
     // TODO: showEvactimeEstimated(estimateWalkEvacTime(evac.walk, ))
 
   }
-
-
-  // Set style function that sets fill color property
-  function evacLinestyle(feature) {
-    return {
-      color: 'green',
-      weight: 2,
-      opacity: 1,
-    };
-
-    var url = "G:/inundationSinglePolygon.geojson"
-    var arr=[]
-    var arr1=[]
-    var evacWalkLayer = L.geoJson(null, {onEachFeature: forEachFeature, style: evacLinestyle});
-
-    $.getJSON(url, function(data) {
-      evacWalkLayer.addData(data);
-
-      for (i = 0; i < data.features.length; i++) {  //loads Add into an Array for searching
-        arr1.push({label:data.features[i].properties.FULLADD, value:""});
-      }
-      addDataToAutocomplete(arr1);  //passes array for sorting and to load search control.
-    });
-
-
-    function forEachFeature(feature, layer) {
-      // Tagging each evac line with their address for the search control.
-      layer._leaflet_id = feature.properties.FULLADD;
-
-      var popupContent = "<p><b>Full Adress: </b>"+ feature.properties.FULLADD +
-        "</br>POSTCODE: "+ feature.properties.POSTCODE +
-        "</br>LENGTH (m): "+ feature.properties.LENGTH_GEO </p>";
-
-      layer.bindPopup(popupContent);
-    }
-
-    function addDataToAutocomplete(arr) {
-
-      arr.sort(function(a, b){ // sort object by Add
-        var nameA=a.label, nameB=b.label
-        if (nameA < nameB) //sort string ascending
-          return -1
-        if (nameA > nameB)
-          return 1
-        return 0 //default return value (no sorting)
-      })
-
-      // The source for autocomplete.  https://api.jqueryui.com/autocomplete/#method-option
-      $( "#autocomplete" ).autocomplete("option", "https://api.jqueryui.com/autocomplete/#method-option", arr);
-
-      $( "#autocomplete" ).on( "autocompleteselect", function( event, ui ) {
-        evacLineSelect(ui.item.label);  //grabs evacline corresponding to selected address
-        ui.item.value='';
-      });
-    }	///////////// Autocomplete search end
-
-// fire off click event and zoom to evacLine
-    function evacLineSelect(a){
-      map._layers[a].fire('click');  // 'clicks' on evac lines from search
-      var layer = map._layers[a];
-      map.fitBounds(layer.getBounds());  // zooms to selected line
-    }
-// END...fire off click event and zoom to evac line
-
-// Set style function that sets fill color property
-    function evacLinestyle(feature) {
-      return {
-        color: 'green',
-        weight: 2,
-        opacity: 1,
-      };
-
-      var url = "G:/inundationSinglePolygon.geojson"
-      var arr=[]
-      var arr1=[]
-      var evacWalkLayer = L.geoJson(null, {onEachFeature: forEachFeature, style: evacLinestyle});
-
-      $.getJSON(url, function(data) {
-        evacWalkLayer.addData(data);
-
-        for (i = 0; i < data.features.length; i++) {  //loads Add into an Array for searching
-          arr1.push({label:data.features[i].properties.FULLADD, value:""});
-        }
-        addDataToAutocomplete(arr1);  //passes array for sorting and to load search control.
-      });
-
-
-      function forEachFeature(feature, layer) {
-        // Tagging each evac line with their address for the search control.
-        layer._leaflet_id = feature.properties.FULLADD;
-
-        var popupContent = "<p><b>Full Adress: </b>"+ feature.properties.FULLADD +
-          "</br>POSTCODE: "+ feature.properties.POSTCODE +
-          "</br>LENGTH (m): "+ feature.properties.LENGTH_GEO </p>";
-
-        layer.bindPopup(popupContent);
-      }
-
-      function addDataToAutocomplete(arr) {
-
-        arr.sort(function(a, b){ // sort object by Name
-          var nameA=a.label, nameB=b.label
-          if (nameA < nameB) //sort string ascending
-            return -1
-          if (nameA > nameB)
-            return 1
-          return 0 //default return value (no sorting)
-        })
-
-        // The source for autocomplete.  https://api.jqueryui.com/autocomplete/#method-option
-        $( "#autocomplete" ).autocomplete("option", "https://api.jqueryui.com/autocomplete/#method-option", arr);
-
-        $( "#autocomplete" ).on( "autocompleteselect", function( event, ui ) {
-          evacLineSelect(ui.item.label);  //grabs evacline corresponding to selected address
-          ui.item.value='';
-        });
-      }	///////////// Autocomplete search end
-
-// fire off click event and zoom to evacLine
-      function evacLineSelect(a){
-        map._layers[a].fire('click');  // 'clicks' on evac lines from search
-        var layer = map._layers[a];
-        map.fitBounds(layer.getBounds());  // zooms to selected line
-      }
-// END...fire off click event and zoom to evac line
 
 
       // tham số đầu là url template, thằng Leaf sẽ tự thay `Zoom` vào {z}, kinh độ vĩ
