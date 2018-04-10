@@ -71,7 +71,6 @@ function inundationLayer () {
   return _inundation
 }
 
-
 function baseMapLayer () {
   return openstreetLayer()
 }
@@ -147,81 +146,53 @@ function alert (msg) {
 }
 
 // use places.js to search
-(function searchAuto() {
+function initializeAddressLocator () {
   var placesAutocomplete = places({
-    container: document.querySelector('#input-map')
-  });
+    container: document.querySelector('#address-locator')
+  })
 
-  var map = L.map('survive_map', {
-    scrollWheelZoom: false,
-    zoomControl: false
-  });
+  let map = mapInstance()
 
-  placesAutocomplete.on('suggestions', handleOnSuggestions);
-  placesAutocomplete.on('cursorchanged', handleOnCursorchanged);
-  placesAutocomplete.on('change', handleOnChange);
-  placesAutocomplete.on('clear', handleOnClear);
+  placesAutocomplete.on('suggestions', handleOnSuggestions)
+  // placesAutocomplete.on('cursorchanged', handleOnCursorchanged)
+  placesAutocomplete.on('change', handleOnChange)
+  // placesAutocomplete.on('clear', handleOnClear)
 
-  var markers = [];
-  function handleOnSuggestions(e) {
-    markers.forEach(removeMarker);
-    markers = [];
+  let marker
 
-    if (e.suggestions.length === 0) {
-      map.setView(DEFAULT_LOCATION, DEFAULT_ZOOM);
-      return;
-    }
-
-    e.suggestions.forEach(addMarker);
-    findBestZoom();
+  function handleOnSuggestions (e) {
+    e.suggestions.forEach(suggestion => {
+      log('found \'' + suggestion.value + '\' at [' + suggestion.latlng.lat + ', ' + suggestion.latlng.lng + ']')
+    })
   }
 
-  function handleOnChange(e) {
-    markers
-      .forEach(function(marker, markerIndex) {
-        if (markerIndex === e.suggestionIndex) {
-          markers = [marker];
-          marker.setOpacity(1);
-          findBestZoom();
-        } else {
-          removeMarker(marker);
-        }
-      });
+  function handleOnChange (e) {
+    let suggestion = e.suggestion
+    log('pick \'' + suggestion.value + '\' at [' + suggestion.latlng.lat + ', ' + suggestion.latlng.lng + ']')
+
+    if (!!marker) dropout(marker)
+    moveMarker(suggestion.latlng)
+    relocateMap(suggestion.latlng)
   }
 
-  function handleOnClear() {
-    map.setView(DEFAULT_LOCATION, DEFAULT_ZOOM);
-    markers.forEach(removeMarker);
+  function moveMarker (latlng) {
+    marker = L.marker(latlng, {opacity: 1})
+    marker.addTo(map)
+    log('moved marker to new location at [' + latlng.lat + ', ' + latlng.lng)
   }
 
-  function handleOnCursorchanged(e) {
-    markers
-      .forEach(function(marker, markerIndex) {
-        if (markerIndex === e.suggestionIndex) {
-          marker.setOpacity(1);
-          marker.setZIndexOffset(1000);
-        } else {
-          marker.setZIndexOffset(0);
-          marker.setOpacity(0.5);
-        }
-      });
+  function dropout (marker) {
+    map.removeLayer(marker)
+    log('removed marker at [' + marker._latlng.lat + ', ' + marker._latlng.lng)
+
   }
 
-  function addMarker(suggestion) {
-    var marker = L.marker(suggestion.latlng, {opacity: .4});
-    marker.addTo(map);
-    markers.push(marker);
-  }
+  function relocateMap (latlng) {
+    map.setView(latlng, DEFAULT_ZOOM)
+    log('relocated map to new location at [' + latlng.lat + ', ' + latlng.lng)
 
-  function removeMarker(marker) {
-    map.removeLayer(marker);
   }
-
-  function findBestZoom() {
-    var featureGroup = L.featureGroup(markers);
-    map.fitBounds(featureGroup.getBounds().pad(0.5), {animate: false});
-  }
-})();
+}
 
 function getEvacFromCurrentPosition (leafletCoordinat) {
   $.post('/evac', leafletCoordinat, (evac, status) => {
@@ -244,8 +215,6 @@ function getEvacFromId (evacId) {
   })
 }
 
-
-
 function drawEvac (evac) {
   let zoom = DEFAULT_ZOOM
 
@@ -262,8 +231,7 @@ function drawEvac (evac) {
 
   }
 
-
-      // tham số đầu là url template, thằng Leaf sẽ tự thay `Zoom` vào {z}, kinh độ vĩ
+  // tham số đầu là url template, thằng Leaf sẽ tự thay `Zoom` vào {z}, kinh độ vĩ
   // độ vào {x} và {y}, {s} thì có thể ko cần quan tâm, nhưng từ những tham số đó nó sẽ lấy dc các tấm ảnh bản đồ và "lát" vào div,
   // mỗi khi các tham số thay đổi thì nó lấy lại các ảnh khác
   //
