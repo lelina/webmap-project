@@ -8,24 +8,24 @@ body {
   padding-top: 54px;
 }
 
-@media (min-width: 1200px) {
-
-  .container {
-    min-width: 600px;
-    max-width: 970px;
-  }
-
-  .map-container {
-    min-width: 600px;
-  }
-
-  footer {
-    position : absolute;
-    bottom : 0;
-    width: 100%;
-  }
+.container {
+  min-width: 600px;
+  max-width: 970px;
 }
 
+.map-container {
+  min-width: 600px;
+}
+
+footer {
+  position : absolute;
+  bottom : 0;
+  width: 100%;
+}
+
+span.algolia-places {
+  z-index: 9999;
+}
 .carousel-item {
   height: 65vh;
   min-height: 300px;
