@@ -10,6 +10,7 @@ let User = require('./models/User')
 // CONNECT MONGODB
 let url = 'mongodb://binhsonnguyen.com:8000/webmap-dev'
 mongoose.connect(url)
+
 //SETTINGS
 app.use(express.static(__dirname + '/public'))
 
@@ -34,21 +35,7 @@ passport.deserializeUser(User.deserializeUser())
 // ROUTES
 // ===========
 app.get('/', (req, res) => {
-  let alertPanel = {
-    appearanceColor: function(){
-      if(this.futureRisk.isExisted ===false) return 'alert-panel--false'
-      else return 'alert-panel--true'
-    },
-    futureRisk: {
-      isExisted: false
-    },
-    date: new Date()
-
-  }
-  res.render('index', {
-    alertPanel: alertPanel,
-    currentUser: req.user
-  })
+  res.render('index')
 })
 
 // AUTHENTICATION ROUTES
@@ -99,6 +86,12 @@ app.post('/evac', (req, res) => {
   res.send(JSON.stringify(coor));
 })
 
+app.get('/', (req, res) => {
+  let coord = {x: -43.57032122469974, y: 172.755133778481479}
+  res.setHeader('Content-Type', 'application/json');
+  res.send(JSON.stringify(coord));
+})
+
 // 404 ROUTE
 app.use(function(req, res, next) {
   res.status(404).render('404.ejs');
@@ -109,12 +102,17 @@ app.listen(8000, () => {
 })
 
 
+function inundationMap(){
+  'use strict'
+  return map
+}
+
 function getEvac(evacId) {
   return getFaker()
 }
 
 function  getFaker (addr) {
-  // TODO: find the first one that have address exists in...
+  // TODO: find the first one that has address exists in...
   let evac = {
     forAddress: '44 TAYLORS MISTAKE BAY SUMNER',
     addressGPS: {
@@ -166,4 +164,5 @@ function  getFaker (addr) {
   };
   return evac;
 }
+
 
