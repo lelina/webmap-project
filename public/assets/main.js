@@ -3,7 +3,17 @@ const EVAC_OPTION_WALK = 'walk'
 const DEFAULT_ZOOM = 13
 const DEBUG = true
 
-function locateCurrentPossition () {
+function startup() {
+
+  let map = L.map('survive_map').setView([-43.57032122469974, 172.755133778481479], DEFAULT_ZOOM)
+  googleStreets = L.tileLayer('http://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}',{
+    maxZoom: 20,
+    subdomains:['mt0','mt1','mt2','mt3']
+  }).addTo(map);
+
+}
+
+function locateCurrentPosition () {
   // log('locateCurrentPossition')
   // let isSupportedBrowser = navigator.geolocation
   // if (isSupportedBrowser) {
@@ -12,7 +22,7 @@ function locateCurrentPossition () {
   //   alert('Geolocation is not supported by this browser.')
   // }
 
-  var map = L.map('survive_map').locate({setView: true, maxZoom: DEFAULT_ZOOM});
+  let map = L.map('survive_map').locate({setView: true, maxZoom: DEFAULT_ZOOM});
 
   googleStreets = L.tileLayer('http://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}',{
     maxZoom: 20,

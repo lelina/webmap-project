@@ -8,7 +8,7 @@ let express = require('express'),
 let app = express()
 let User = require('./models/User')
 // CONNECT MONGODB
-let url = 'mongodb://binhsonnguyen.com:8000/linalan'
+let url = 'mongodb://binhsonnguyen.com:8000/webmap-dev'
 mongoose.connect(url)
 //SETTINGS
 app.use(express.static(__dirname + '/public'))
