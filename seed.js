@@ -11,6 +11,9 @@ const StreamArray = require('stream-json/utils/StreamArray')
 let DriveEvac = require('./models/drive_evac')
 let WalkEvac = require('./models/walk_evac')
 
+let walk_count = 0
+let drive_count = 0
+
 mongoose.connect(`${process.env.MONGO}/webmap-production`)
   .then(() => {
     /***
@@ -39,9 +42,10 @@ function createDriveEvacsStream () {
   let stream = StreamArray.make()
 
   stream.output
-    .on('data', ({index, data}) => {
-      new DriveEvac(parseDriveEvac(data)).save((err, result) => {
+    .on('data', (data) => {
+      new DriveEvac(parseDriveEvac(data.value)).save((err, result) => {
         if (!!err) log(err)
+        else log(`seeded drive ${drive_count++}`)
       })
     }).on('end', () => log('reached end of stream!'))
 
@@ -50,10 +54,10 @@ function createDriveEvacsStream () {
   function parseDriveEvac (data) {
     return {
       forAddress: data['properties']['FULLADD'],
-      addressGPS: toXYCoordinate(data['geometry']['coordinates'][0]),
+      addressGPS: toXYCoordinate(data['geometry']['coordinates'][0][0]),
       length: data['properties']['LENGTH_GEO'],
       timeEstimated: data['properties']['Minute'],
-      points: data['geometry']['coordinates'].map(pair => toXYCoordinate(pair))
+      points: data['geometry']['coordinates'][0].map(pair => toXYCoordinate(pair))
     }
   }
 }
@@ -62,10 +66,10 @@ function createWalkEvacsStream () {
   let stream = StreamArray.make()
 
   stream.output
-    .on('data', ({index, data}) => {
-      if (!data) return log('null')
-      new DriveEvac(parseWalkEvac(data)).save((err, result) => {
+    .on('data', (data) => {
+      new WalkEvac(parseWalkEvac(data.value)).save((err, result) => {
         if (!!err) log(err)
+        else log(`seeded walk ${walk_count++}`)
       })
     }).on('end', () => log('reached end of stream!'))
 
@@ -74,9 +78,9 @@ function createWalkEvacsStream () {
   function parseWalkEvac (data) {
     return {
       forAddress: data['properties']['FULLADD'],
-      addressGPS: toXYCoordinate(data['geometry']['coordinates'][0]),
+      addressGPS: toXYCoordinate(data['geometry']['coordinates'][0][0]),
       length: data['properties']['LENGTH_GEO'],
-      points: data['geometry']['coordinates'].map(pair => toXYCoordinate(pair))
+      points: data['geometry']['coordinates'][0].map(pair => toXYCoordinate(pair))
     }
   }
 
@@ -87,5 +91,5 @@ function toXYCoordinate (array) {
 }
 
 function log (msg) {
-  console.log(`SEEDER: streamfile: ${msg}`)
+  console.log(`SEEDER: ${msg}`)
 }
