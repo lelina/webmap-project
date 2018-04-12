@@ -4,7 +4,7 @@ require('dotenv').config()
 const mongoose = require('mongoose')
 const path = require('path')
 const fs = require('fs')
-const argv = require('minimist')(process.argv);
+const argv = require('minimist')(process.argv)
 
 const StreamArray = require('stream-json/utils/StreamArray')
 
@@ -13,21 +13,21 @@ let WalkEvac = require('./models/walk_evac')
 
 mongoose.connect(`${process.env.MONGO}/webmap-production`)
   .then(() => {
-  /***
-   * bỏ dữ liệu cũ
-   */
-  DriveEvac.collection.drop()
-  WalkEvac.collection.drop()
+    /***
+     * bỏ dữ liệu cũ
+     */
+    DriveEvac.collection.drop()
+    WalkEvac.collection.drop()
 
-  /***
-   * Chúng ta sẽ chạy file seed này bằng lệnh `node seed.js -e walk -i walk.json`,
-   * hoặc `node seed.js -e drive -i drive.json`
-   * Hoặc bằng run configuration như ảnh anh gửi, trong câu lệnh dưới đây, `argv.e`
-   * sẽ có giá trị `walk` hoặc `drive`, và `argv.i` sẽ có giá trị `walk.json` hoặc
-   * `drive.json`
-   */
-  streamDriveEvacs(argv.e, argv.i)
-})
+    /***
+     * Chúng ta sẽ chạy file seed này bằng lệnh `node seed.js -e walk -i walk.json`,
+     * hoặc `node seed.js -e drive -i drive.json`
+     * Hoặc bằng run configuration như ảnh anh gửi, trong câu lệnh dưới đây, `argv.e`
+     * sẽ có giá trị `walk` hoặc `drive`, và `argv.i` sẽ có giá trị `walk.json` hoặc
+     * `drive.json`
+     */
+    streamDriveEvacs(argv.e, argv.i)
+  })
 
 function streamDriveEvacs (mode, source) {
   let filepath = path.join(__dirname, source)
