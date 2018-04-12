@@ -26,10 +26,10 @@ mongoose.connect(`${process.env.MONGO}/webmap-production`)
      * sẽ có giá trị `walk` hoặc `drive`, và `argv.i` sẽ có giá trị `walk.json` hoặc
      * `drive.json`
      */
-    streamDriveEvacs(argv.e, argv.i)
+    seedEvacs(argv.e, argv.i)
   })
 
-function streamDriveEvacs (mode, source) {
+function seedEvacs (mode, source) {
   let filepath = path.join(__dirname, source)
   let stream = mode === 'walk' ? createWalkEvacsStream() : createDriveEvacsStream()
   fs.createReadStream(filepath).pipe(stream.input)
