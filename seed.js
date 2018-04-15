@@ -42,23 +42,13 @@ function createDriveEvacsStream () {
 
   stream.output
     .on('data', (data) => {
-      new DriveEvac(parseDriveEvac(data.value)).save((err, result) => {
+      new DriveEvac(parseEvac(data.value, true)).save((err, result) => {
         if (!!err) log(err)
         else log(`seeded drive ${drive_count++}`)
       })
     }).on('end', () => log('reached end of stream!'))
 
   return stream
-
-  function parseDriveEvac (data) {
-    return {
-      forAddress: data['properties']['FULLADD'],
-      addressGPS: toXYCoordinate(data['geometry']['coordinates'][0][0]),
-      length: data['properties']['LENGTH_GEO'],
-      timeEstimated: data['properties']['Minute'],
-      points: data['geometry']['coordinates'][0].map(pair => toXYCoordinate(pair))
-    }
-  }
 }
 
 function createWalkEvacsStream () {
@@ -66,7 +56,7 @@ function createWalkEvacsStream () {
 
   stream.output
     .on('data', (data) => {
-      new WalkEvac(parseWalkEvac(data.value)).save((err, result) => {
+      new WalkEvac(parseEvac(data.value)).save((err, result) => {
         if (!!err) log(err)
         else log(`seeded walk ${walk_count++}`)
       })
@@ -74,15 +64,19 @@ function createWalkEvacsStream () {
 
   return stream
 
-  function parseWalkEvac (data) {
-    return {
-      forAddress: data['properties']['FULLADD'],
-      addressGPS: toXYCoordinate(data['geometry']['coordinates'][0][0]),
-      length: data['properties']['LENGTH_GEO'],
-      points: data['geometry']['coordinates'][0].map(pair => toXYCoordinate(pair))
-    }
+}
+
+function parseEvac(data, isDrive) {
+  let evac = {
+    forAddress: data['properties']['FULLADD'],
+    addressGPS: toXYCoordinate(data['geometry']['coordinates'][0][0]),
+    length: data['properties']['LENGTH_GEO'],
+    points: data['geometry']['coordinates'][0].map(pair => toXYCoordinate(pair))
   }
 
+  if (isDrive) evac.timeEstimated = data['properties']['Minute']
+
+  return evac
 }
 
 function toXYCoordinate (array) {
