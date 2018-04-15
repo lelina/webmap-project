@@ -71,10 +71,15 @@ function parseEvac(data, isDrive) {
     forAddress: data['properties']['FULLADD'],
     addressGPS: toXYCoordinate(data['geometry']['coordinates'][0][0]),
     length: data['properties']['LENGTH_GEO'],
-    points: data['geometry']['coordinates'][0].map(pair => toXYCoordinate(pair))
   }
 
-  if (isDrive) evac.timeEstimated = data['properties']['Minute']
+  if (isDrive) {
+    evac.points = data['geometry']['coordinates'].map(pair => toXYCoordinate(pair))
+    evac.timeEstimated = data['properties']['Minute']
+  } else {
+    evac.points = data['geometry']['coordinates'][0].map(pair => toXYCoordinate(pair))
+
+  }
 
   return evac
 }
