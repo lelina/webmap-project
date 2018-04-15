@@ -54,6 +54,7 @@ const INUNDATION_OPTIONS = {
 let _map
 let _inundation
 let _openstreetMap
+let _marker
 
 function mapInstance () {
   if (!_map) {
@@ -133,10 +134,6 @@ function locateCurrentPossition () {
 
 }
 
-function locateBySearchResult () {
-  log('locateBySearchResult')
-}
-
 function log (msg) {
   if (DEBUG) console.log(msg)
 }
@@ -158,8 +155,6 @@ function initializeAddressLocator () {
   placesAutocomplete.on('change', handleOnChange)
   // placesAutocomplete.on('clear', handleOnClear)
 
-  let marker
-
   function handleOnSuggestions (e) {
     e.suggestions.forEach(suggestion => {
       log('found \'' + suggestion.value + '\' at [' + suggestion.latlng.lat + ', ' + suggestion.latlng.lng + ']')
@@ -170,14 +165,14 @@ function initializeAddressLocator () {
     let suggestion = e.suggestion
     log('pick \'' + suggestion.value + '\' at [' + suggestion.latlng.lat + ', ' + suggestion.latlng.lng + ']')
 
-    if (!!marker) dropout(marker)
+    if (!!_marker) dropout(_marker)
     moveMarker(suggestion.latlng)
     relocateMap(suggestion.latlng)
   }
 
   function moveMarker (latlng) {
-    marker = L.marker(latlng, {opacity: 1})
-    marker.addTo(map)
+    _marker = L.marker(latlng, {opacity: 1})
+    _marker.addTo(map)
     log('moved marker to new location at [' + latlng.lat + ', ' + latlng.lng)
   }
 
