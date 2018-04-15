@@ -19,8 +19,7 @@ mongoose.connect(`${process.env.MONGO}/webmap-production`)
     /***
      * bỏ dữ liệu cũ
      */
-    DriveEvac.collection.drop()
-    WalkEvac.collection.drop()
+    argv.e === 'walk' ? WalkEvac.collection.drop() : DriveEvac.collection.drop()
 
     /***
      * Chúng ta sẽ chạy file seed này bằng lệnh `node seed.js -e walk -i walk.json`,
