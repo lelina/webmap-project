@@ -57,7 +57,7 @@ app.post('/drive/:lat/:lon', (req, res) => {
         }
       }
     }, function (err, evac) {
-      return !!err ? onErr(err) : onFound(evac)
+      return !!err || !evac ? onErr(err) : onFound(evac)
     })
   }
 
@@ -94,7 +94,7 @@ app.post('/walk/:lat/:lon', (req, res) => {
         }
       }
     }, function (err, evac) {
-      return !!err ? onErr(err) : onFound(evac)
+      return !!err || !evac ? onErr(err) : onFound(evac)
     })
   }
 
