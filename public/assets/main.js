@@ -119,12 +119,12 @@ function inundationToggle () {
 
 function loadInundationMap () {
   inundationLayer().addTo(mapInstance())
-  log('loaded inundation data')
+  log('added inundation layer')
 }
 
 function hideInundationMap () {
   inundationLayer().remove()
-  log('hidden inundation data')
+  log('hidden inundation layer')
 }
 
 function locateCurrentPossition () {
