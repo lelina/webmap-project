@@ -7,8 +7,10 @@ let schema = mongoose.Schema({
     coordinates: []
   },
   length: Number,
-  points: [{x: Number, y: Number}],
-})
+  points: [{
+    type: {type: String},
+    coordinates: []
+  }],})
 
 schema.index({location: '2dsphere'})
 

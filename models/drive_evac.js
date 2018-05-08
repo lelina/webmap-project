@@ -7,7 +7,10 @@ let schema = mongoose.Schema({
     coordinates: []
   },
   length: Number,
-  points: [{x: Number, y: Number}],
+  points: [{
+    type: {type: String},
+    coordinates: []
+  }],
   timeEstimated: Number,
 })
 
