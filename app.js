@@ -1,9 +1,12 @@
-let express = require('express'),
-  mongoose = require('mongoose'),
-  passport = require('passport'),
-  LocalStrategy = require('passport-local'),
-  expressSession = require('express-session'),
-  bodyParser = require('body-parser')
+'use strict'
+require('dotenv').config()
+
+const express = require('express')
+const mongoose = require('mongoose')
+const passport = require('passport')
+const LocalStrategy = require('passport-local')
+const expressSession = require('express-session')
+const bodyParser = require('body-parser')
 
 let app = express()
 let User = require('./models/User')
@@ -21,7 +24,7 @@ app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({extended: false}))
 // AUTHENTICATE SETTINGS
 app.use(expressSession({
-  secret: "Ohmama",
+  secret: 'Ohmama',
   resave: false,
   saveUninitialized: false
 }))
@@ -39,7 +42,7 @@ app.get('/', (req, res) => {
 })
 
 // AUTHENTICATION ROUTES
-app.get('/login', function(req, res) {
+app.get('/login', function (req, res) {
   res.render('loginForm', {
     currentUser: req.user
   })
@@ -48,70 +51,72 @@ app.get('/login', function(req, res) {
 app.post('/login', passport.authenticate('local', {
   successRedirect: '/',
   failureRedirect: '/login'
-}) ,function(req, res) {})
+}), function (req, res) {})
 
-app.get('/register', function(req, res) {
+app.get('/register', function (req, res) {
   res.render('signUpForm', {
     currentUser: req.user
   })
 })
 
-app.post('/register', function(req, res) {
-  User.register(new User({username: req.body.username, email: req.body.email}), req.body.password, function(err, user) {
+app.post('/register', function (req, res) {
+  User.register(new User({
+    username: req.body.username,
+    email: req.body.email
+  }), req.body.password, function (err, user) {
     if (err) {
       console.log(err)
       res.redirect('signUpForm')
     }
-    passport.authenticate('local')(req, res, function() {
+    passport.authenticate('local')(req, res, function () {
       res.redirect('/')
     })
   })
 })
 
-app.get('/logout', function(req, res) {
+app.get('/logout', function (req, res) {
   req.logout()
   res.redirect('/')
 })
 
 app.post('/evac/:evacId', (req, res) => {
   let coor = getEvac(req.params['evacId'])
-  res.setHeader('Content-Type', 'application/json');
-  res.send(JSON.stringify(coor));
+  res.setHeader('Content-Type', 'application/json')
+  res.send(JSON.stringify(coor))
 })
 
 app.post('/evac', (req, res) => {
-  let addr = req.body['address']; // TODO: from bodyparse
+  let addr = req.body['address'] // TODO: from bodyparse
   let coor = getFaker(addr)
-  res.setHeader('Content-Type', 'application/json');
-  res.send(JSON.stringify(coor));
+  res.setHeader('Content-Type', 'application/json')
+  res.send(JSON.stringify(coor))
 })
 
 app.get('/', (req, res) => {
   let coord = {x: -43.57032122469974, y: 172.755133778481479}
-  res.setHeader('Content-Type', 'application/json');
-  res.send(JSON.stringify(coord));
+  res.setHeader('Content-Type', 'application/json')
+  res.send(JSON.stringify(coord))
 })
 
 // 404 ROUTE
-app.use(function(req, res, next) {
-  res.status(404).render('404.ejs');
+app.use(function (req, res, next) {
+  res.status(404).render('404.ejs')
 })
 
 app.listen(8000, () => {
   console.log('Server started at http://localhost:8000')
 })
 
-
-function inundationMap(){
+function inundationMap () {
   'use strict'
   return map
 }
 
-function getEvac(evacId) {
+function getEvac (evacId) {
   return getFaker()
 }
 
-function  getFaker (addr) {
+function getFaker (addr) {
   // TODO: find the first one that has address exists in...
   let evac = {
     forAddress: '44 TAYLORS MISTAKE BAY SUMNER',
@@ -161,8 +166,8 @@ function  getFaker (addr) {
         'y': 172.762023746341612,
       }]
 
-  };
-  return evac;
+  }
+  return evac
 }
 
 
