@@ -187,16 +187,51 @@ function initializeAddressLocator () {
     let lng = suggestion.latlng.lng
     log('pick \'' + suggestion.value + '\' at [' + lat + ', ' + lng + ']')
 
-    $.post(`/evac/${lat}/${lng}`, (evac, status) => {
-      if (status != 'success') {
-        alert('We have no route to show you')
+    let foundOne = false
+    let responses = 0
+    $.post(`/drive/${lat}/${lng}`, (result, status) => {
+      responses++
+      if (status != 'success' && responses == 2) {
+        alert('Sorry! We have no route to show you')
       } else {
-        log('found evac!')
-        log(evac)
-        if (!!_marker) dropout(_marker)
-        moveMarker(latlng)
-        relocateMap(latlng)
-        drawEvac(evac.points)
+        if (!!result.failed && responses == 2) {
+          alert('Sorry! We have no route to show you')
+          return
+        }
+
+        log('found drive!')
+        log(result)
+        if (!foundOne) {
+          if (!!_marker) dropout(_marker)
+          moveMarker(latlng)
+          relocateMap(latlng)
+          foundOne = true
+        }
+        let isDrive = true
+        drawEvac([lng, lat], result.points, isDrive)
+      }
+    })
+
+    $.post(`/walk/${lat}/${lng}`, (result, status) => {
+      responses++
+      if (status != 'success' && responses == 2) {
+        alert('Sorry! We have no route to show you')
+      } else {
+        if (!!result.failed && responses == 2) {
+          alert('Sorry! We have no route to show you')
+          return
+        }
+
+        log('found walk!')
+        log(result)
+        if (!foundOne) {
+          if (!!_marker) dropout(_marker)
+          moveMarker(latlng)
+          relocateMap(latlng)
+          foundOne = true
+        }
+        let isDrive = false
+        drawEvac([lng, lat], result.points, isDrive)
       }
     })
   }
@@ -220,58 +255,25 @@ function initializeAddressLocator () {
   }
 }
 
-function getEvacFromCurrentPosition (leafletCoordinat) {
-  $.post('/evac', leafletCoordinat, (evac, status) => {
-    if (status != 'success') {
-      alert('We have no route to show you')
-    } else {
-      drawEvac(evac.points)
-    }
+function drawEvac (startPoint, points, isDrive) {
+  let evacs = []
+  evacs.push(startPoint)
+  points.forEach(point => {
+    evacs.push([point.coordinates[0], point.coordinates[1]])
   })
-}
-
-function getEvacFromId (evacId) {
-  let params = {id: evacId} //getCurrentCoorFromBrowser();
-  if (DEBUG)
-    params = {address: '68 Nguyen Co Thach'}
-
-  $.post(`/evac/$evacId`, (evac, status) => {
-    if (status != 'success') return
-    drawEvac(evac)
-  })
-}
-
-function drawEvac (points, isDrive) {
-  let zoom = DEFAULT_ZOOM
-
   let geo = {
     type: 'LineString',
-    coordinates: points.map(coor => [coor.y, coor.x])
+    coordinates: evacs
   }
 
-  new L.GeoJSON(geo, isDrive ? DRIVE_EVAC_OPTIONS : WALK_EVAC_OPTIONS).addTo(mapInstance())
+  if (isDrive) {
+    if (!!_driveEvac) map.removeLayer(_driveEvac)
+    _driveEvac = new L.GeoJSON(geo, DRIVE_EVAC_OPTIONS)
+    _driveEvac.addTo(mapInstance())
+  } else {
+    if (!!_walkEvac) map.removeLayer(_walkEvac)
+    _walkEvac = new L.GeoJSON(geo, WALK_EVAC_OPTIONS)
+    _walkEvac.addTo(mapInstance())
+  }
 
-}
-
-function drawPolyLine (points, map) {
-  let lats = points.map(point => new L.LatLng(point.x, point.y))
-
-  let firstpolyline = new L.Polyline(lats, {
-    color: 'red',
-    weight: 3,
-    opacity: 0.5,
-    smoothFactor: 1
-  })
-  firstpolyline.addTo(map)
-}
-
-function searchAdd (feature, map) {
-  let featuresLayer = new L.GeoJSON(data, {
-    style: function (feature) {
-      return {color: feature.properties.color}
-    },
-    onEachFeature: function (feature, marker) {
-      marker.bindPopup('<h4 style="color:' + feature.properties.color + '">' + feature.properties.name + '</h4>')
-    }
-  })
 }
