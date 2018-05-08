@@ -19,7 +19,9 @@ mongoose.connect(`${process.env.MONGO}/webmap-production`)
     /***
      * bỏ dữ liệu cũ
      */
-    argv.e === 'walk' ? WalkEvac.collection.drop() : DriveEvac.collection.drop()
+    argv.e === 'walk'
+      ? WalkEvac.collection.drop() && WalkEvac.collection.dropIndexes()
+      : DriveEvac.collection.drop() && DriveEvac.collection.dropIndexes()
 
     /***
      * Chúng ta sẽ chạy file seed này bằng lệnh `node seed.js -e walk -i walk.json`,
@@ -66,26 +68,30 @@ function createWalkEvacsStream () {
 
 }
 
-function parseEvac(data, isDrive) {
+function parseEvac (data, isDrive) {
   let evac = {
     forAddress: data['properties']['FULLADD'],
-    addressGPS: toXYCoordinate(data['geometry']['coordinates'][0][0]),
     length: data['properties']['LENGTH_GEO'],
   }
 
   if (isDrive) {
-    evac.points = data['geometry']['coordinates'].map(pair => toXYCoordinate(pair))
+    evac.location = toLocation(data['geometry']['coordinates'][0])
+    evac.points = data['geometry']['coordinates'].map(pair => toLocation(pair))
     evac.timeEstimated = data['properties']['Minute']
   } else {
-    evac.points = data['geometry']['coordinates'][0].map(pair => toXYCoordinate(pair))
+    evac.location = toLocation(data['geometry']['coordinates'][0][0])
+    evac.points = data['geometry']['coordinates'][0].map(pair => toLocation(pair))
 
   }
 
   return evac
 }
 
-function toXYCoordinate (array) {
-  return {x: array[1], y: array[0]}
+function toLocation (array) {
+  return {
+    type: 'Point',
+    coordinates: [array[0], array[1]]
+  }
 }
 
 function log (msg) {
