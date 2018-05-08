@@ -26,29 +26,79 @@ app.get('/', (req, res) => {
   res.render('index')
 })
 
-app.post('/evac/:lat/:lon', (req, res) => {
+app.post('/drive/:lat/:lon', (req, res) => {
   let coor = {
     lat: req.params.lat,
     lon: req.params.lon
   }
 
-  findEvac(coor, onErr, onFound)
+  findDriveEvac(coor, onErr, onFound)
 
   function onErr (err) {
     log(err)
+    res.setHeader('Content-Type', 'application/json')
+    res.send(JSON.stringify({failed: 1}))
   }
 
   function onFound (evac) {
     res.setHeader('Content-Type', 'application/json')
     res.send(JSON.stringify(evac))
   }
+
+  function findDriveEvac (coor, onErr, onFound) {
+    DriveEvac.findOne({
+      'location': {
+        '$nearSphere': {
+          '$geometry': {
+            'type': 'Point',
+            'coordinates': [coor.lon, coor.lat]
+          },
+          '$maxDistance': 100
+        }
+      }
+    }, function (err, evac) {
+      return !!err ? onErr(err) : onFound(evac)
+    })
+  }
+
 })
 
-function findEvac(coor, onErr, onFound) {
-  DriveEvac.findOne({}, function (err, evac) {
-    return !!err ? onErr(err) : onFound(evac)
-  })
-}
+app.post('/walk/:lat/:lon', (req, res) => {
+  let coor = {
+    lat: req.params.lat,
+    lon: req.params.lon
+  }
+
+  findWalkEvacs(coor, onErr, onFound)
+
+  function onErr (err) {
+    log(err)
+    res.setHeader('Content-Type', 'application/json')
+    res.send(JSON.stringify({failed: 1}))
+  }
+
+  function onFound (evac) {
+    res.setHeader('Content-Type', 'application/json')
+    res.send(JSON.stringify(evac))
+  }
+
+  function findWalkEvacs (coor, onErr, onFound) {
+    WalkEvac.findOne({
+      'location': {
+        '$nearSphere': {
+          '$geometry': {
+            'type': 'Point',
+            'coordinates': [coor.lon, coor.lat]
+          },
+          '$maxDistance': 50
+        }
+      }
+    }, function (err, evac) {
+      return !!err ? onErr(err) : onFound(evac)
+    })
+  }
+
+})
 
 // 404 ROUTE
 
