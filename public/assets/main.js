@@ -127,6 +127,34 @@ function hideInundationMap () {
   log('hidden inundation layer')
 }
 
+function driveToggle () {
+  $('#driveToggle').is(':checked') ? loadDriveEvac() : hideDriveEvac()
+}
+
+function loadDriveEvac () {
+  _driveEvac.addTo(mapInstance())
+  log('added drive layer')
+}
+
+function hideDriveEvac () {
+  _driveEvac.remove()
+  log('hidden drive layer')
+}
+
+function walkToggle () {
+  $('#walkToggle').is(':checked') ? loadWalkEvac() : hideWalkEvac()
+}
+
+function loadWalkEvac () {
+  _walkEvac.addTo(mapInstance())
+  log('added walk layer')
+}
+
+function hideWalkEvac () {
+  _walkEvac.remove()
+  log('hidden walk layer')
+}
+
 function locateCurrentPossition () {
   mapInstance().locate({setView: true, maxZoom: DEFAULT_ZOOM})
 
