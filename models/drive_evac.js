@@ -2,14 +2,18 @@ let mongoose = require('mongoose')
 
 let schema = mongoose.Schema({
   forAddress: String,
-  addressGPS:
-    {
-      x: Number,
-      y: Number
-    },
+  location: {
+    type: {type: String},
+    coordinates: []
+  },
   length: Number,
-  points: [{x: Number, y: Number}],
+  points: [{
+    type: {type: String},
+    coordinates: []
+  }],
   timeEstimated: Number,
 })
+
+schema.index({location: '2dsphere'})
 
 module.exports = mongoose.model('DriveEvac', schema)

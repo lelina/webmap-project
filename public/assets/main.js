@@ -46,14 +46,33 @@ const INUNDATION_DATA = [
 
 const INUNDATION_OPTIONS = {
   style: {
-    'color': '#f03',
+    'color': '#0af',
+    'opacity': 0.65
+  }
+}
+
+const DRIVE_EVAC_OPTIONS = {
+
+  style: {
+    'color': '#0a0',
+    'opacity': 0.65
+  }
+}
+
+const WALK_EVAC_OPTIONS = {
+
+  style: {
+    'color': '#f80',
     'opacity': 0.65
   }
 }
 
 let _map
 let _inundation
+let _driveEvac
+let _walkEvac
 let _openstreetMap
+let _marker
 
 function mapInstance () {
   if (!_map) {
@@ -100,12 +119,12 @@ function inundationToggle () {
 
 function loadInundationMap () {
   inundationLayer().addTo(mapInstance())
-  log('loaded inundation data')
+  log('added inundation layer')
 }
 
 function hideInundationMap () {
   inundationLayer().remove()
-  log('hidden inundation data')
+  log('hidden inundation layer')
 }
 
 function locateCurrentPossition () {
@@ -133,10 +152,6 @@ function locateCurrentPossition () {
 
 }
 
-function locateBySearchResult () {
-  log('locateBySearchResult')
-}
-
 function log (msg) {
   if (DEBUG) console.log(msg)
 }
@@ -156,9 +171,8 @@ function initializeAddressLocator () {
   placesAutocomplete.on('suggestions', handleOnSuggestions)
   // placesAutocomplete.on('cursorchanged', handleOnCursorchanged)
   placesAutocomplete.on('change', handleOnChange)
-  // placesAutocomplete.on('clear', handleOnClear)
 
-  let marker
+  // placesAutocomplete.on('clear', handleOnClear)
 
   function handleOnSuggestions (e) {
     e.suggestions.forEach(suggestion => {
@@ -168,16 +182,63 @@ function initializeAddressLocator () {
 
   function handleOnChange (e) {
     let suggestion = e.suggestion
-    log('pick \'' + suggestion.value + '\' at [' + suggestion.latlng.lat + ', ' + suggestion.latlng.lng + ']')
+    let latlng = suggestion.latlng
+    let lat = suggestion.latlng.lat
+    let lng = suggestion.latlng.lng
+    log('pick \'' + suggestion.value + '\' at [' + lat + ', ' + lng + ']')
 
-    if (!!marker) dropout(marker)
-    moveMarker(suggestion.latlng)
-    relocateMap(suggestion.latlng)
+    let foundOne = false
+    let responses = 0
+    $.post(`/drive/${lat}/${lng}`, (result, status) => {
+      responses++
+      if (status != 'success' && responses == 2) {
+        alert('Sorry! We have no route to show you')
+      } else {
+        if (!!result.failed && responses == 2) {
+          alert('Sorry! We have no route to show you')
+          return
+        }
+
+        log('found drive!')
+        log(result)
+        if (!foundOne) {
+          if (!!_marker) dropout(_marker)
+          moveMarker(latlng)
+          relocateMap(latlng)
+          foundOne = true
+        }
+        let isDrive = true
+        drawEvac([lng, lat], result.points, isDrive)
+      }
+    })
+
+    $.post(`/walk/${lat}/${lng}`, (result, status) => {
+      responses++
+      if (status != 'success' && responses == 2) {
+        alert('Sorry! We have no route to show you')
+      } else {
+        if (!!result.failed && responses == 2) {
+          alert('Sorry! We have no route to show you')
+          return
+        }
+
+        log('found walk!')
+        log(result)
+        if (!foundOne) {
+          if (!!_marker) dropout(_marker)
+          moveMarker(latlng)
+          relocateMap(latlng)
+          foundOne = true
+        }
+        let isDrive = false
+        drawEvac([lng, lat], result.points, isDrive)
+      }
+    })
   }
 
   function moveMarker (latlng) {
-    marker = L.marker(latlng, {opacity: 1})
-    marker.addTo(map)
+    _marker = L.marker(latlng, {opacity: 1})
+    _marker.addTo(map)
     log('moved marker to new location at [' + latlng.lat + ', ' + latlng.lng)
   }
 
@@ -194,141 +255,25 @@ function initializeAddressLocator () {
   }
 }
 
-function getEvacFromCurrentPosition (leafletCoordinat) {
-  $.post('/evac', leafletCoordinat, (evac, status) => {
-    if (status != 'success') {
-      alert('We have no route to show you')
-    } else {
-      drawEvac(evac)
-    }
+function drawEvac (startPoint, points, isDrive) {
+  let evacs = []
+  evacs.push(startPoint)
+  points.forEach(point => {
+    evacs.push([point.coordinates[0], point.coordinates[1]])
   })
-}
-
-function getEvacFromId (evacId) {
-  let params = {id: evacId} //getCurrentCoorFromBrowser();
-  if (DEBUG)
-    params = {address: '68 Nguyen Co Thach'}
-
-  $.post(`/evac/$evacId`, (evac, status) => {
-    if (status != 'success') return
-    drawEvac(evac)
-  })
-}
-
-function drawEvac (evac) {
-  let zoom = DEFAULT_ZOOM
-
-  mapInstance().setView([evac.addressGPS.x, evac.addressGPS.y], zoom)
-
-  let evacOption = EVAC_OPTION_DRIVE
-  if (evacOption === EVAC_OPTION_DRIVE) {
-    drawPolyLine(evac.drive, mapInstance())
-    // TODO: showEvactimeEstimated(evac.driveTimeEstimated)
-  }
-  else {
-    drawPolyLine(evac.walk, mapInstance())
-    // TODO: showEvactimeEstimated(estimateWalkEvacTime(evac.walk, ))
-
+  let geo = {
+    type: 'LineString',
+    coordinates: evacs
   }
 
-  // tham số đầu là url template, thằng Leaf sẽ tự thay `Zoom` vào {z}, kinh độ vĩ
-  // độ vào {x} và {y}, {s} thì có thể ko cần quan tâm, nhưng từ những tham số đó nó sẽ lấy dc các tấm ảnh bản đồ và "lát" vào div,
-  // mỗi khi các tham số thay đổi thì nó lấy lại các ảnh khác
-  //
-  // chỗ này cũng để ngỏ khả năng mình thay {x} và {y} bằng thông số mình muốn
-  if (DEBUG) console.log('loading tile at [' + evac.x + ', ' + evac.y + ']')
-  let urlTemplate = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
-  let tileLayerOptions = {
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-    maxZoom: 18
-  }
-  L.tileLayer(urlTemplate, tileLayerOptions).addTo(mapInstance())
-
-  L.marker([evac.x, evac.y])
-    .addTo(mapInstance())
-    .bindPopup('A pretty CSS3 popup.<br> Easily customizable.')
-    .openPopup()
-
-  let evacLineCoor = {x: evac.x - 0.009, y: evac.y + 0.025}
-  let evacLineStyle = {
-    color: 'red',
-    fillColor: '#f03',
-    fillOpacity: 0.5,
-    radius: 500
-  }
-  //circle change to line
-  let evacLine = L.polyline([evacLineCoor.x, evacLineCoor.y], evacLineStyle)
-    .addto(mapInstance())
-  let redAlert = L.circle([evacLineCoor.x, evacLineCoor.y], redAlertStyle)
-    .addTo(mapInstance())
-
-  let yellowAlertCoors = [{x: 51.509, y: -0.08}, {x: 51.503, y: -0.06}, {
-    x: 51.51,
-    y: -0.047
-  }]
-  let yellowAlertStyle = {
-    color: 'yellow',
-    fillColor: '#ff3',
-    fillOpacity: 0.5,
-    radius: 500
+  if (isDrive) {
+    if (!!_driveEvac) map.removeLayer(_driveEvac)
+    _driveEvac = new L.GeoJSON(geo, DRIVE_EVAC_OPTIONS)
+    _driveEvac.addTo(mapInstance())
+  } else {
+    if (!!_walkEvac) map.removeLayer(_walkEvac)
+    _walkEvac = new L.GeoJSON(geo, WALK_EVAC_OPTIONS)
+    _walkEvac.addTo(mapInstance())
   }
 
-  // giải thích về `yellowAlertCoors.map(coor => [coor.x, coor.y]`: L.mapInstance() là phương thức của các đối tượng
-  // mảng, phương thức này trả về một mảng có độ dài tương đương với mảng cũ, bằng cách "convert" mỗi
-  // phần tử của mảng cũ thành một phần tử mới, theo cách được mô tả trong tham số của nó:
-  // yellowAlertCoors.map(function(coor) { return [coor.x, coor.y] })
-  //
-  // đoạn `function(coor) { return [coor.x, coor.y] }` có thể được viết tắt như dưới đây
-  let yellowAlert = L.polygon(yellowAlertCoors.map(coor => [coor.x, coor.y]), yellowAlertStyle).addTo(mapInstance())
 }
-
-function drawPolyLine (points, map) {
-  let lats = points.map(point => new L.LatLng(point.x, point.y))
-
-  let firstpolyline = new L.Polyline(lats, {
-    color: 'red',
-    weight: 3,
-    opacity: 0.5,
-    smoothFactor: 1
-  })
-  firstpolyline.addTo(map)
-}
-
-function searchAdd (feature, map) {
-  let featuresLayer = new L.GeoJSON(data, {
-    style: function (feature) {
-      return {color: feature.properties.color}
-    },
-    onEachFeature: function (feature, marker) {
-      marker.bindPopup('<h4 style="color:' + feature.properties.color + '">' + feature.properties.name + '</h4>')
-    }
-  })
-}
-
-// map.addLayer(featuresLayer)
-// let searchControl = new L.Control.Search({
-//   layer: featuresLayer,
-//   propertyName: 'name',
-//   marker: false,
-//   moveToLocation: function (latlng, title, map) {
-//     //map.fitBounds( latlng.layer.getBounds() );
-//     let zoom = map.getBoundsZoom(latlng.layer.getBounds())
-//     map.setView(latlng, zoom) // access the zoom
-//   }
-// })
-// searchControl.on('search:locationfound', function (e) {
-//
-//   //console.log('search:locationfound', );
-//   //map.removeLayer(this._markerSearch)
-//   e.layer.setStyle({fillColor: '#3f0', color: '#0f0'})
-//   if (e.layer._popup)
-//     e.layer.openPopup()
-// }).on('search:collapsed', function (e) {
-//   featuresLayer.eachLayer(function (layer) {	//restore feature color
-//     featuresLayer.resetStyle(layer)
-//   })
-// })
-//
-// map.addControl(searchControl)  //inizialize search control
-//
-// }

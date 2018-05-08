@@ -93,13 +93,17 @@ const StreamArray = require('stream-json/utils/StreamArray')
 let DriveEvac = require('./models/drive_evac')
 let WalkEvac = require('./models/walk_evac')
 
+let walk_count = 0
+let drive_count = 0
+
 mongoose.connect(`${process.env.MONGO}/webmap-production`)
   .then(() => {
     /***
      * bỏ dữ liệu cũ
      */
-    DriveEvac.collection.drop()
-    WalkEvac.collection.drop()
+    argv.e === 'walk'
+      ? WalkEvac.collection.drop() && WalkEvac.collection.dropIndexes()
+      : DriveEvac.collection.drop() && DriveEvac.collection.dropIndexes()
 
     /***
      * Chúng ta sẽ chạy file seed này bằng lệnh `node seed.js -e walk -i walk.json`,
@@ -121,54 +125,58 @@ function createDriveEvacsStream () {
   let stream = StreamArray.make()
 
   stream.output
-    .on('data', ({index, data}) => {
-      new DriveEvac(parseDriveEvac(data)).save((err, result) => {
+    .on('data', (data) => {
+      new DriveEvac(parseEvac(data.value, true)).save((err, result) => {
         if (!!err) log(err)
+        else log(`seeded drive ${drive_count++}`)
       })
     }).on('end', () => log('reached end of stream!'))
 
   return stream
-
-  function parseDriveEvac (data) {
-    return {
-      forAddress: data['properties']['FULLADD'],
-      addressGPS: toXYCoordinate(data['geometry']['coordinates'][0]),
-      length: data['properties']['LENGTH_GEO'],
-      timeEstimated: data['properties']['Minute'],
-      points: data['geometry']['coordinates'].map(pair => toXYCoordinate(pair))
-    }
-  }
 }
 
 function createWalkEvacsStream () {
   let stream = StreamArray.make()
 
   stream.output
-    .on('data', ({index, data}) => {
-      if (!data) return log('null')
-      new DriveEvac(parseWalkEvac(data)).save((err, result) => {
+    .on('data', (data) => {
+      new WalkEvac(parseEvac(data.value)).save((err, result) => {
         if (!!err) log(err)
+        else log(`seeded walk ${walk_count++}`)
       })
     }).on('end', () => log('reached end of stream!'))
 
   return stream
 
-  function parseWalkEvac (data) {
-    return {
-      forAddress: data['properties']['FULLADD'],
-      addressGPS: toXYCoordinate(data['geometry']['coordinates'][0]),
-      length: data['properties']['LENGTH_GEO'],
-      points: data['geometry']['coordinates'].map(pair => toXYCoordinate(pair))
-    }
-  }
-
 }
 
-function toXYCoordinate (array) {
-  return {x: array[1], y: array[0]}
+function parseEvac (data, isDrive) {
+  let evac = {
+    forAddress: data['properties']['FULLADD'],
+    length: data['properties']['LENGTH_GEO'],
+  }
+
+  if (isDrive) {
+    evac.location = toLocation(data['geometry']['coordinates'][0])
+    evac.points = data['geometry']['coordinates'].map(pair => toLocation(pair))
+    evac.timeEstimated = data['properties']['Minute']
+  } else {
+    evac.location = toLocation(data['geometry']['coordinates'][0][0])
+    evac.points = data['geometry']['coordinates'][0].map(pair => toLocation(pair))
+
+  }
+
+  return evac
+}
+
+function toLocation (array) {
+  return {
+    type: 'Point',
+    coordinates: [array[0], array[1]]
+  }
 }
 
 function log (msg) {
-  console.log(`SEEDER: streamfile: ${msg}`)
+  console.log(`SEEDER: ${msg}`)
 }
 >>>>>>> 51fc40cdf6a3e49fca2a146758be0e91c9cd5a64
