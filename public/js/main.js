@@ -23,10 +23,10 @@ const GOOGLESTREET_TEMPLATE = {
   }
 }
 /*Take same coordinates's order given from GeoJSON file.ex: [172.740839757922146,-43.562543510134788 ]*/
-import {INUNDATION_DATA} from 'inundationData1'
+
 const INUNDATION_OPTIONS = {
   style: {
-    'color': '#0af',
+    'color': '#f61a1a', 
     'opacity': 0.65
   }
 }
