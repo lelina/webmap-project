@@ -4,7 +4,8 @@ require('dotenv').config()
 const express = require('express')
 
 const mongoose = require('mongoose')
-mongoose.connect(`${process.env.MONGO}/webmap-production`)
+// mongoose.connect(`${process.env.MONGO}/webmap-production`)
+mongoose.connect('mongodb://binhsonnguyen.com:8000/webmap-production')
 
 const bodyParser = require('body-parser')
 
