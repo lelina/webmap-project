@@ -5,8 +5,10 @@ const DEBUG = true
 const EVAC_OPTION_DRIVE = 'drive'
 const EVAC_OPTION_WALK = 'walk'
 
-const DEFAULT_ZOOM = 15
+const DEFAULT_ZOOM = 17
 const DEFAULT_LOCATION = {lat: -43.57643167342933, lng: 172.76022442275394}
+let crLat = DEFAULT_LOCATION.lat
+let crLng = DEFAULT_LOCATION.lng
 const OPENSTREET_TEMPLATE = {
   URL: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
   OPTIONS: {
@@ -54,6 +56,9 @@ let _walkEvac
 let _openstreetMap
 let _marker
 let _googleMap
+let map
+let markerList = []
+let markerCount = 0
 
 function mapInstance () {
   if (!_map) {
@@ -91,11 +96,13 @@ function googlemapLayer () {
 }
 
 function initializeMap () {
-  mapInstance().scrollWheelZoom.disable()
-  mapInstance().setView(DEFAULT_LOCATION, DEFAULT_ZOOM)
+  map = mapInstance()
+  map.scrollWheelZoom.disable()
+  map.setView(DEFAULT_LOCATION, DEFAULT_ZOOM)
+  newMarker(DEFAULT_LOCATION, 'default location')
   log('map initialized with default view and options')
 
-  baseMapLayer().addTo(mapInstance())
+  baseMapLayer().addTo(map)
   log('loaded tile at [' + DEFAULT_LOCATION.lat + ', ' + DEFAULT_LOCATION.lng + ']')
 
   inundationToggle()
@@ -106,7 +113,7 @@ function inundationToggle () {
 }
 
 function loadInundationMap () {
-  inundationLayer().addTo(mapInstance())
+  inundationLayer().addTo(map)
   log('added inundation layer')
 }
 
@@ -116,11 +123,11 @@ function hideInundationMap () {
 }
 
 function locateCurrentPosition () {
-  mapInstance().locate({setView: true, maxZoom: DEFAULT_ZOOM})
+  map.locate({setView: true, maxZoom: DEFAULT_ZOOM})
 
-  L.tileLayer(GOOGLESTREET_TEMPLATE.URL, GOOGLESTREET_TEMPLATE.OPTIONS).addTo(mapInstance())
+  L.tileLayer(GOOGLESTREET_TEMPLATE.URL, GOOGLESTREET_TEMPLATE.OPTIONS).addTo(map)
 
-  mapInstance().locate({
+  map.locate({
     setView: true,
     maxZoom: 16,
     watch: true,
@@ -129,14 +136,14 @@ function locateCurrentPosition () {
 
   function onLocationFound (e) {
     let radius = e.accuracy / 2
-    L.marker(e.latlng).addTo(mapInstance())
+    L.marker(e.latlng).addTo(map)
       .bindPopup('You are within ' + radius + ' meters from this point').openPopup()
-    L.circle(e.latlng, radius).addTo(mapInstance())
+    L.circle(e.latlng, radius).addTo(map)
 
     //TODO: getEvacFromCurrentPosition
   }
 
-  mapInstance().on('locationfound', onLocationFound)
+  map.on('locationfound', onLocationFound)
 
 }
 
@@ -147,14 +154,13 @@ function log (msg) {
 function alert (msg) {
   alert(msg)
 }
-
 // use places.js to search
 function initializeAddressLocator () {
   var placesAutocomplete = places({
     container: document.querySelector('#address-locator')
   })
 
-  let map = mapInstance()
+  
 
   // placesAutocomplete.on('suggestions', handleOnSuggestions)
   // placesAutocomplete.on('cursorchanged', handleOnCursorchanged)
@@ -174,74 +180,89 @@ function initializeAddressLocator () {
     let lat = suggestion.latlng.lat
     let lng = suggestion.latlng.lng
     log('pick \'' + suggestion.value + '\' at [' + lat + ', ' + lng + ']')
-    moveMarker(latlng)
-    relocateMap(latlng)
-    let foundOne = false
-    let responses = 0
-    $.get(`/drive/${suggestion.value}`, (result, status) => {
-      responses++
-      if (status != 'success' && responses == 2) {
-        alert('Sorry! We have no route to show you')
-      } else {
-        if (!!result.failed && responses == 2) {
-          alert('Sorry! We have no route to show you')
-          return
-        }
-
-        log('found drive!')
-        log(result)
-        if (!foundOne) {
-          if (!!_marker) dropout(_marker)
-          moveMarker(latlng)
-          relocateMap(latlng)
-          foundOne = true
-        }
-        let isDrive = true
-        drawEvac([lng, lat], result.points, isDrive)
-      }
-    })
-
-    $.post(`/walk/${lat}/${lng}`, (result, status) => {
-      responses++
-      if (status != 'success' && responses == 2) {
-        alert('Sorry! We have no route to show you')
-      } else {
-        if (!!result.failed && responses == 2) {
-          alert('Sorry! We have no route to show you')
-          return
-        }
-
-        log('found walk!')
-        log(result)
-        if (!foundOne) {
-          if (!!_marker) dropout(_marker)
-          moveMarker(latlng)
-          relocateMap(latlng)
-          foundOne = true
-        }
-        let isDrive = false
-        drawEvac([lng, lat], result.points, isDrive)
-      }
-    })
+    moveMarker(latlng, suggestion.value)
+    relocateMap(latlng) 
+    crLat = lat
+    crLng = lng   
   }
 
-  function moveMarker (latlng) {
-    _marker = L.marker(latlng, {opacity: 1})
-    _marker.addTo(map)
-    log('moved marker to new location at [' + latlng.lat + ', ' + latlng.lng)
-  }
+  
+}
 
-  function dropout (marker) {
+function newMarker (latlng, msg) {
+  markerList[markerCount] = L.marker(latlng).bindTooltip(msg)
+  markerList[markerCount].addTo(map)
+  markerCount++
+  log('new marker at new location at [' + latlng.lat + ', ' + latlng.lng)
+}
+
+function moveMarker (latlng, msg) {
+  dropout(markerList.length)
+  newMarker(latlng, msg)
+}
+
+function dropout (nFirstMarkers) {
+  let deletedMarkers = markerList.splice(0, nFirstMarkers)
+  deletedMarkers.forEach((marker) => {
     map.removeLayer(marker)
     log('removed marker at [' + marker._latlng.lat + ', ' + marker._latlng.lng)
+  })  
 
-  }
+}
 
-  function relocateMap (latlng) {
-    map.setView(latlng, DEFAULT_ZOOM+1)
-    log('relocated map to new location at [' + latlng.lat + ', ' + latlng.lng)
+function relocateMap (latlng) {
+  map.setView(latlng, DEFAULT_ZOOM)
+  log('relocated map to new location at [' + latlng.lat + ', ' + latlng.lng)
 
-  }
+}
+
+let foundOne = false
+let responses = 0
+
+function driveToggle() {
+  $.post(`/drive/${crLat}/${crLng}`, (result, status) => {
+    responses++
+    if (status != 'success' && responses == 2) {
+      log('Sorry! We have no route to show you')
+    } else {
+      if (!!result.failed && responses == 2) {
+        log('Sorry! We have no route to show you')
+        return
+      }
+
+      log('found drive!')
+      log(result)
+      let newLatLngArray = result.points[result.points.length-1].coordinates
+      let newLatLngObj = {lat: newLatLngArray[0], lng: newLatLngArray[1]}
+      newMarker(newLatLngObj, result.forAddress)
+      relocateMap(newLatLngObj)
+      let isDrive = true
+      drawEvac([crLng, crLat], result.points, isDrive)
+    }
+  })
+}
+
+function walkToggle() {
+  $.post(`/walk/${crLat}/${crLng}`, (result, status) => {
+    responses++
+    if (status != 'success' && responses == 2) {
+      log('Sorry! We have no route to show you')
+    } else {
+      if (!!result.failed && responses == 2) {
+        log('Sorry! We have no route to show you')
+        return
+      }
+
+      log('found walk!')
+      log(result)
+      let newLatLngArray = result.points[result.points.length-1].coordinates
+      let newLatLngObj = {lat: newLatLngArray[1], lng: newLatLngArray[0]}
+      newMarker(newLatLngObj, result.forAddress)
+      relocateMap(newLatLngObj)
+      let isDrive = false
+      drawEvac([crLng, crLat], result.points, isDrive)
+    }
+  })
 }
 
 function drawEvac (startPoint, points, isDrive) {
@@ -258,11 +279,11 @@ function drawEvac (startPoint, points, isDrive) {
   if (isDrive) {
     if (!!_driveEvac) map.removeLayer(_driveEvac)
     _driveEvac = new L.GeoJSON(geo, DRIVE_EVAC_OPTIONS)
-    _driveEvac.addTo(mapInstance())
+    _driveEvac.addTo(map)
   } else {
     if (!!_walkEvac) map.removeLayer(_walkEvac)
     _walkEvac = new L.GeoJSON(geo, WALK_EVAC_OPTIONS)
-    _walkEvac.addTo(mapInstance())
+    _walkEvac.addTo(map)
   }
 
 }
