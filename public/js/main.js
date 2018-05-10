@@ -178,7 +178,7 @@ function initializeAddressLocator () {
     relocateMap(latlng)
     let foundOne = false
     let responses = 0
-    $.post(`/drive/${lat}/${lng}`, (result, status) => {
+    $.get(`/drive/${suggestion.value}`, (result, status) => {
       responses++
       if (status != 'success' && responses == 2) {
         alert('Sorry! We have no route to show you')

@@ -26,40 +26,32 @@ app.get('/', (req, res) => {
   res.render('index')
 })
 
-app.post('/drive/:lat/:lon', (req, res) => {
-  let coor = {
-    lat: req.params.lat,
-    lon: req.params.lon
-  }
+app.get('/drive/:suggestion', (req, res) => {
+  let suggestion = req.params.suggestion
+  let query = DriveEvac.find({$text: {$search: suggestion}})
+  query.exec(function(err, result) {
+    if (err) return log(err)
+    res.send(result)
+  })
+  // findDriveEvac(suggestion, onErr, onFound)
 
-  findDriveEvac(coor, onErr, onFound)
+  // function onErr (err) {
+  //   log(err)
+  //   res.setHeader('Content-Type', 'application/json')
+  //   res.send(JSON.stringify({failed: 1}))
+  // }
 
-  function onErr (err) {
-    log(err)
-    res.setHeader('Content-Type', 'application/json')
-    res.send(JSON.stringify({failed: 1}))
-  }
+  // function onFound (evac) {
+  //   res.setHeader('Content-Type', 'application/json')
+  //   res.send(JSON.stringify(evac))
+  // }
 
-  function onFound (evac) {
-    res.setHeader('Content-Type', 'application/json')
-    res.send(JSON.stringify(evac))
-  }
-
-  function findDriveEvac (coor, onErr, onFound) {
-    DriveEvac.findOne({
-      'location': {
-        '$nearSphere': {
-          '$geometry': {
-            'type': 'Point',
-            'coordinates': [coor.lon, coor.lat]
-          },
-          '$maxDistance': 100
-        }
-      }
-    }, function (err, evac) {
-      return !!err || !evac ? onErr(err) : onFound(evac)
-    })
-  }
+  // function findDriveEvac (address, onErr, onFound) {
+  //   let regex = new RegExp('^'+address+'$', "i")
+  //   DriveEvac.findOne({forAddress: address}, function (err, evac) {
+  //     return !!err || !evac ? onErr(err) : onFound(evac)
+  //   })
+  // }
 
 })
 
