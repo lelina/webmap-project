@@ -32,7 +32,7 @@ mongoose.connect('mongodb://binhsonnguyen.com:8000/webmap-production')
      * sẽ có giá trị `walk` hoặc `drive`, và `argv.i` sẽ có giá trị `walk.json` hoặc
      * `drive.json`
      */
-    seedEvacs('drive', 'drive-demo.json')
+    seedEvacs('drive', 'drive.json')
   })
   
 function seedEvacs (mode, source) {
