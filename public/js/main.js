@@ -156,7 +156,7 @@ function initializeAddressLocator () {
 
   let map = mapInstance()
 
-  placesAutocomplete.on('suggestions', handleOnSuggestions)
+  // placesAutocomplete.on('suggestions', handleOnSuggestions)
   // placesAutocomplete.on('cursorchanged', handleOnCursorchanged)
   placesAutocomplete.on('change', handleOnChange)
 
@@ -174,7 +174,8 @@ function initializeAddressLocator () {
     let lat = suggestion.latlng.lat
     let lng = suggestion.latlng.lng
     log('pick \'' + suggestion.value + '\' at [' + lat + ', ' + lng + ']')
-
+    moveMarker(latlng)
+    relocateMap(latlng)
     let foundOne = false
     let responses = 0
     $.post(`/drive/${lat}/${lng}`, (result, status) => {
@@ -237,7 +238,7 @@ function initializeAddressLocator () {
   }
 
   function relocateMap (latlng) {
-    map.setView(latlng, DEFAULT_ZOOM)
+    map.setView(latlng, DEFAULT_ZOOM+1)
     log('relocated map to new location at [' + latlng.lat + ', ' + latlng.lng)
 
   }
