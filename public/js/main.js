@@ -53,6 +53,7 @@ let _driveEvac
 let _walkEvac
 let _openstreetMap
 let _marker
+let _googleMap
 
 function mapInstance () {
   if (!_map) {
@@ -71,7 +72,7 @@ function inundationLayer () {
 }
 
 function baseMapLayer () {
-  return openstreetLayer()
+  return googlemapLayer()
 }
 
 function openstreetLayer () {
@@ -80,6 +81,13 @@ function openstreetLayer () {
     log('openstreet layer initialized')
   }
   return _openstreetMap
+}
+function googlemapLayer () {
+  if (!_googleMap) {
+    _googleMap = new L.tileLayer(GOOGLESTREET_TEMPLATE.URL, GOOGLESTREET_TEMPLATE.OPTIONS)
+    log('googlemap layer initialized')
+  }
+  return _googleMap
 }
 
 function initializeMap () {
@@ -107,7 +115,7 @@ function hideInundationMap () {
   log('hidden inundation layer')
 }
 
-function locateCurrentPossition () {
+function locateCurrentPosition () {
   mapInstance().locate({setView: true, maxZoom: DEFAULT_ZOOM})
 
   L.tileLayer(GOOGLESTREET_TEMPLATE.URL, GOOGLESTREET_TEMPLATE.OPTIONS).addTo(mapInstance())
