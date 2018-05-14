@@ -36,13 +36,9 @@ app.get('/addresses', (req, res) => {
   res.send(JSON.stringify(addresses))
 })
 
-app.post('/drive/:lat/:lon', (req, res) => {
-  let coor = {
-    lat: req.params.lat,
-    lon: req.params.lon
-  }
-
-  findDriveEvac(coor, onErr, onFound)
+app.get('/drive/:suggestion', (req, res) => {
+  let address = req.params.suggestion
+  findDriveEvac(address, onErr, onFound)
 
   function onErr (err) {
     log(err)
@@ -55,18 +51,9 @@ app.post('/drive/:lat/:lon', (req, res) => {
     res.send(JSON.stringify(evac))
   }
 
-  function findDriveEvac (coor, onErr, onFound) {
-    DriveEvac.findOne({
-      'location': {
-        '$nearSphere': {
-          '$geometry': {
-            'type': 'Point',
-            'coordinates': [coor.lon, coor.lat]
-          },
-          '$maxDistance': 100
-        }
-      }
-    }, function (err, evac) {
+  function findDriveEvac (address, onErr, onFound) {
+    let regex = new RegExp('^'+address+'$', "i")
+    DriveEvac.findOne({forAddress: address}, function (err, evac) {
       return !!err || !evac ? onErr(err) : onFound(evac)
     })
   }

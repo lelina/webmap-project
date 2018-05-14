@@ -8,13 +8,15 @@ const argv = require('minimist')(process.argv)
 
 const StreamArray = require('stream-json/utils/StreamArray')
 
-let DriveEvac = require('./models/drive_evac')
-let WalkEvac = require('./models/walk_evac')
+let DriveEvac = require('../models/drive_evac')
+let WalkEvac = require('../models/walk_evac')
 
 let walk_count = 0
 let drive_count = 0
 
-mongoose.connect(`${process.env.MONGO}/webmap-production`)
+let addressArray = []
+// mongoose.connect(`${process.env.MONGO}/webmap-production`)
+mongoose.connect('mongodb://binhsonnguyen.com:8000/webmap-production')
   .then(() => {
     /***
      * bỏ dữ liệu cũ
@@ -30,9 +32,9 @@ mongoose.connect(`${process.env.MONGO}/webmap-production`)
      * sẽ có giá trị `walk` hoặc `drive`, và `argv.i` sẽ có giá trị `walk.json` hoặc
      * `drive.json`
      */
-    seedEvacs(argv.e, argv.i)
+    seedEvacs('drive', 'drive.json')
   })
-
+  
 function seedEvacs (mode, source) {
   let filepath = path.join(__dirname, source)
   let stream = mode === 'walk' ? createWalkEvacsStream() : createDriveEvacsStream()
@@ -97,3 +99,4 @@ function toLocation (array) {
 function log (msg) {
   console.log(`SEEDER: ${msg}`)
 }
+
