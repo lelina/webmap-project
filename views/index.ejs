@@ -15,6 +15,9 @@
     <script src="assets/jquery/jquery.js"></script>
     <script src="assets/bootstrap/js/bootstrap.js"></script>
 
+    <!--Bootstrap Notiry-->
+    <script src="assets/bootstrap-notify/bootstrap-notify.js"></script>
+
     <!--Leaflet CSS-->
     <link rel="stylesheet" href="assets/leaflet/leaflet.css"/>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/leaflet/1/leaflet.css"/>
@@ -40,6 +43,10 @@
     <script src="assets/places/places.js"></script>
     <script src="assets/places/placesAutocompleteDataset.js"></script>
     <script src="assets/places/placesInstantsearchWidget.js"></script>
+
+    <!--select2-->
+    <link href="assets/select2/dist/css/select2.css" rel="stylesheet" />
+    <script src="assets/select2/dist/js/select2.js"></script>
 
 </head>
 
@@ -84,9 +91,10 @@
             </div>
 
         </div>
-        <div class="ml-auto">
-            <input type="button" id="onclick-locator" class="mx-2" value="Locate">
-            <input type="search" id="address-locator" placeholder="Search for: Address">
+        <div class="ml-auto col-md-5">
+            <!--<input type="search" id="address-locator" class="col-md-12" placeholder="Search for: Address">-->
+            <select id="address-locator" class="col-md-12" name="addresses[]">
+            </select>
         </div>
 
     </div>

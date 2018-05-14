@@ -26,6 +26,16 @@ app.get('/', (req, res) => {
   res.render('index')
 })
 
+app.get('/addresses', (req, res) => {
+  let addresses = [
+    {id: 1, address: '44 taylor'},
+    {id: 2, address: '42 taylor'},
+    {id: 3, address: '41 taylor'}
+  ]
+  res.setHeader('Content-Type', 'application/json')
+  res.send(JSON.stringify(addresses))
+})
+
 app.post('/drive/:lat/:lon', (req, res) => {
   let coor = {
     lat: req.params.lat,

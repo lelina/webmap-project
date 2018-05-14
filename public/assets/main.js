@@ -185,11 +185,37 @@ function log (msg) {
 }
 
 function alert (msg) {
-  alert(msg)
+  $.notify({
+    message: msg
+  },{
+    type: 'danger'
+  });
 }
 
 // use places.js to search
-function initializeAddressLocator () {
+function initializeAddressLocator() {
+  initializeAddressLocatorUseLocalData();
+}
+
+function initializeAddressLocatorUseLocalData() {
+  $('#address-locator').select2({
+    placeholder: 'Search for address',
+    ajax: {
+      url: '/addresses',
+      dataType: 'json',
+      processResults: function (data) {
+        return {
+          results: data.map(item => ({
+            id: item.id,
+            text: item.address
+          }))
+        };
+      }
+    }
+  });
+}
+
+function initializeAddressLocatorUsePlaceJS () {
   var placesAutocomplete = places({
     container: document.querySelector('#address-locator')
   })
