@@ -51,8 +51,9 @@ app.get('/addresses', (req, res) => {
       }
     })
   }
+  log(allAddresses.filter(item => !item.address).length)
   res.setHeader('Content-Type', 'application/json')
-  res.send(JSON.stringify(allAddresses))
+  res.send(JSON.stringify(allAddresses.filter(item => !!item.address)))
 })
 
 app.get('/drive/:suggestion', (req, res) => {

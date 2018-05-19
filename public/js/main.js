@@ -187,36 +187,35 @@ function log (msg) {
 function alert (msg) {
   $.notify({
     message: msg
-  },{
+  }, {
     type: 'danger'
-  });
+  })
 }
 
 // use places.js to search
-function initializeAddressLocator() {
-  initializeAddressLocatorUseLocalData();
+function initializeAddressLocator () {
+  initializeAddressLocatorUseLocalData()
 }
 
-function initializeAddressLocatorUseLocalData() {
-  $('#address-locator').select2({
-    placeholder: 'Search for address',
-    ajax: {
-      url: '/addresses',
-      dataType: 'json',
-      processResults: function (data) {
-        return {
-          results: data.map(item => ({
-            id: item.id,
-            text: item.address
-          }))
-        };
-      }
-    }
-  });
-  $('#address-locator').on('select2:select', function (e) {
-    var data = e.params.data;
-    console.log(data);
-  });
+function initializeAddressLocatorUseLocalData () {
+  $.get('/addresses',  (result, status) => {
+    let data = result.map(item => ({
+      id: item.id,
+      text: item.address.trim().split(" ").map(w => w[0].toUpperCase() + w.toLowerCase().slice(1)).join(" ")
+    }))
+
+    $('#address-locator').select2({
+      placeholder: 'Search for address',
+      data: data
+    })
+
+
+    $('#address-locator').on('select2:select', function (e) {
+      var data = e.params.data
+      console.log(data)
+    })
+  })
+
 }
 
 function initializeAddressLocatorUsePlaceJS () {
