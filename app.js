@@ -4,7 +4,7 @@ require('dotenv').config()
 const express = require('express')
 
 const mongoose = require('mongoose')
-mongoose.connect(`${process.env.MONGO}/webmap-production`)
+mongoose.Promise = Promise
 
 const bodyParser = require('body-parser')
 
@@ -17,7 +17,7 @@ let app = express()
 
 let walkAddresses = []
 let driveAddresses = []
-let allAddresses = []
+let _allAddresses = []
 
 app.set('views', './views')
 app.set('view engine', 'ejs')
@@ -30,30 +30,83 @@ app.get('/', (req, res) => {
   res.render('index')
 })
 
-app.get('/addresses', (req, res) => {
-  if (!allAddresses || allAddresses.length == 0) {
+function allAddresses () {
+  if (!_allAddresses || _allAddresses.length == 0) {
     let id = 0
-    allAddresses = walkAddresses.map(walk => ({
-      id: id++,
-      readId: {walk: walk.id},
-      address: walk.address
-    }))
-    driveAddresses.forEach(drive => {
-      let previousAdded = allAddresses.find(existed => existed.address === drive.address)
+
+    walkAddresses.forEach(walk => {
+      let previousAdded = _allAddresses.find(item => item.address === walk.address)
       if (!!previousAdded) {
-        previousAdded.readId.drive = drive.id
+        if (!previousAdded.readIds.walk) previousAdded.readIds.walk = []
+        previousAdded.readIds.walk.push(walk.id)
       } else {
-        allAddresses.push({
+        _allAddresses.push({
           id: id++,
-          readId: {drive: drive.id},
+          readIds: {walk: [walk.id]},
+          address: walk.address
+        })
+      }
+    })
+
+    driveAddresses.forEach(drive => {
+      let previousAdded = _allAddresses.find(item => item.address === drive.address)
+      if (!!previousAdded) {
+        log('dupplicate', previousAdded)
+        if (!previousAdded.readIds.drive) previousAdded.readIds.drive = []
+        previousAdded.readIds.drive.push(drive.id)
+      } else {
+        _allAddresses.push({
+          id: id++,
+          readIds: {drive: [drive.id]},
           address: drive.address
         })
       }
     })
   }
-  log(allAddresses.filter(item => !item.address).length)
+  return _allAddresses
+}
+
+app.get('/addresses', (req, res) => {
+  log(allAddresses().filter(item => !item.address).length)
   res.setHeader('Content-Type', 'application/json')
-  res.send(JSON.stringify(allAddresses.filter(item => !!item.address)))
+  res.send(JSON.stringify(allAddresses().filter(item => !!item.address)))
+})
+
+app.get('/resolve/:id', async (req, res) => {
+  let address = allAddresses().find(item => item.id == req.params.id)
+
+  if (!address) {
+    log('Invalid argument!')
+    res.setHeader('Content-Type', 'application/json')
+    res.send(JSON.stringify({failed: 1}))
+    return
+  }
+
+  let result = {drives: [], walks: []}
+
+  let tasks = (address.readIds.drive || [])
+    .map(id => {
+      return DriveEvac
+        .findOne({_id: id})
+        .exec()
+        .then(evac => {
+          if (!!evac) result.drives.push(evac)
+        })
+    })
+    .concat((address.readIds.walk || []).map(id => {
+      return WalkEvac
+        .findOne({_id: id})
+        .exec()
+        .then(evac => {
+          if (!!evac) result.walks.push(evac)
+        })
+    }))
+
+  await Promise.all(tasks)
+
+  res.setHeader('Content-Type', 'application/json')
+  res.send(JSON.stringify(result))
+
 })
 
 app.get('/drive/:suggestion', (req, res) => {
@@ -117,23 +170,39 @@ app.post('/walk/:lat/:lon', (req, res) => {
 
 })
 
-WalkEvac.find({}).exec((err, evacs) => {
-  evacs.forEach(function (evac) {
-    walkAddresses.push({id: evac._id, address: evac.forAddress})
-    log('walkEvacs ' + walkAddresses.length)
+mongoose
+  .connect(`${process.env.MONGO}/webmap-production`)
+  .then(() => {
+    log('mongoose connected!')
+    startApp()
   })
-})
 
-DriveEvac.find({}).exec((err, evacs) => {
-  evacs.forEach(function (evac) {
-    driveAddresses.push({id: evac._id, address: evac.forAddress})
-    log('driveEvacs ' + driveAddresses.length)
-  })
-})
+async function startApp () {
+  let gatherWalks = WalkEvac
+    .find({})
+    .exec()
+    .then(evacs => {
+      evacs.forEach(function (evac) {
+        walkAddresses.push({id: evac._id.toString(), address: evac.forAddress})
+        log('walkEvacs ' + walkAddresses.length)
+      })
+    })
 
-app.listen(8000, () => {
-  console.log('Server started at http://localhost:8000')
-})
+  let gatherDrives = DriveEvac
+    .find({})
+    .exec()
+    .then(evacs => {
+      evacs.forEach(function (evac) {
+        driveAddresses.push({id: evac._id.toString(), address: evac.forAddress})
+        log('driveEvacs ' + driveAddresses.length)
+      })
+    })
+
+  await Promise.all([gatherWalks, gatherDrives])
+
+  app.listen(8000, () => console.log('Server started at http://localhost:8000'))
+
+}
 
 function log (msg) {
   if (DEBUG) console.log(`APP: ${msg}`)
