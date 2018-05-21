@@ -102,7 +102,10 @@ app.get('/resolve/:id', async (req, res) => {
         })
     }))
 
-  await Promise.all(tasks)
+  await Promise.all(tasks).catch(err => {
+    res.setHeader('Content-Type', 'application/json')
+    res.send(JSON.stringify({failed: 1}))
+  })
 
   res.setHeader('Content-Type', 'application/json')
   res.send(JSON.stringify(result))
