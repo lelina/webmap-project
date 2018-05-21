@@ -180,7 +180,7 @@ function locateCurrentPossition () {
 
 }
 
-function log (msg) {
+function log (...msg) {
   if (DEBUG) console.log(msg)
 }
 
@@ -212,7 +212,50 @@ function initializeAddressLocatorUseLocalData () {
 
     $('#address-locator').on('select2:select', function (e) {
       var data = e.params.data
-      console.log(data)
+      log("choosed", data)
+
+      $.get(`/resolve/${data.id}`, (result, status) => {
+        if (status != 'success' || !!result.failed) {
+          log('Sorry! We have no route to show you')
+          alert('Sorry! We have no route to show you')
+        } else {
+          log('found', result)
+
+          let mapRelocatedFlg = false
+
+          if (!!result.drives && result.drives.length > 0) {
+            let evac = result.drives[0]
+            if (!mapRelocatedFlg) {
+              if (!!_marker) dropout(_marker)
+              let latlng = {
+                lat: evac.location.coordinates[1],
+                lng: evac.location.coordinates[0]
+              }
+              moveMarker(latlng)
+              relocateMap(latlng)
+              mapRelocatedFlg = true
+            }
+            const asDrive = true
+            drawEvac(evac.location.coordinates, evac.points, asDrive)
+
+          }
+
+          if (!!result.walks && result.walks.length > 0) {
+            let evac = result.walks[0]
+            if (!mapRelocatedFlg) {
+              if (!!_marker) dropout(_marker)
+              let latlng = {
+                lat: evac.location.coordinates[1],
+                lng: evac.location.coordinates[0]
+              }
+              moveMarker(latlng)
+              relocateMap(latlng)
+            }
+            const asDrive = false
+            drawEvac(evac.location.coordinates, evac.points, asDrive)
+          }
+        }
+      })
     })
   })
 
@@ -293,23 +336,24 @@ function initializeAddressLocatorUsePlaceJS () {
     })
   }
 
-  function moveMarker (latlng) {
-    _marker = L.marker(latlng, {opacity: 1})
-    _marker.addTo(map)
-    log('moved marker to new location at [' + latlng.lat + ', ' + latlng.lng)
-  }
+}
 
-  function dropout (marker) {
-    map.removeLayer(marker)
-    log('removed marker at [' + marker._latlng.lat + ', ' + marker._latlng.lng)
+function moveMarker (latlng) {
+  _marker = L.marker(latlng, {opacity: 1})
+  _marker.addTo(mapInstance())
+  log('moved marker to new location at [' + latlng.lat + ', ' + latlng.lng)
+}
 
-  }
+function dropout (marker) {
+  mapInstance().removeLayer(marker)
+  log('removed marker at [' + marker._latlng.lat + ', ' + marker._latlng.lng)
 
-  function relocateMap (latlng) {
-    map.setView(latlng, DEFAULT_ZOOM)
-    log('relocated map to new location at [' + latlng.lat + ', ' + latlng.lng)
+}
 
-  }
+function relocateMap (latlng) {
+  mapInstance().setView(latlng, DEFAULT_ZOOM)
+  log('relocated map to new location at [' + latlng.lat + ', ' + latlng.lng)
+
 }
 
 function drawEvac (startPoint, points, isDrive) {
@@ -324,11 +368,11 @@ function drawEvac (startPoint, points, isDrive) {
   }
 
   if (isDrive) {
-    if (!!_driveEvac) map.removeLayer(_driveEvac)
+    if (!!_driveEvac) mapInstance().removeLayer(_driveEvac)
     _driveEvac = new L.GeoJSON(geo, DRIVE_EVAC_OPTIONS)
     _driveEvac.addTo(mapInstance())
   } else {
-    if (!!_walkEvac) map.removeLayer(_walkEvac)
+    if (!!_walkEvac) mapInstance().removeLayer(_walkEvac)
     _walkEvac = new L.GeoJSON(geo, WALK_EVAC_OPTIONS)
     _walkEvac.addTo(mapInstance())
   }
