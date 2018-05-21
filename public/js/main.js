@@ -231,13 +231,14 @@ function initializeAddressLocatorUseLocalData () {
                 lat: evac.location.coordinates[1],
                 lng: evac.location.coordinates[0]
               }
+              resetInfomations()
               moveMarker(latlng)
               relocateMap(latlng)
               mapRelocatedFlg = true
             }
             const asDrive = true
             drawEvac(evac.location.coordinates, evac.points, asDrive)
-
+            fillDriveInfomations(evac)
           }
 
           if (!!result.walks && result.walks.length > 0) {
@@ -248,11 +249,13 @@ function initializeAddressLocatorUseLocalData () {
                 lat: evac.location.coordinates[1],
                 lng: evac.location.coordinates[0]
               }
+              resetInfomations()
               moveMarker(latlng)
               relocateMap(latlng)
             }
             const asDrive = false
             drawEvac(evac.location.coordinates, evac.points, asDrive)
+            fillWalkInfomations(evac)
           }
         }
       })
@@ -336,6 +339,19 @@ function initializeAddressLocatorUsePlaceJS () {
     })
   }
 
+}
+
+function resetInfomations () {
+  $('#driveInfomation').text('')
+  $('#walkInfomation').text('')
+}
+
+function fillDriveInfomations (evac) {
+  $('#driveInfomation').text(`${evac.forAddress} - drive length: ${evac.length} miles`)
+}
+
+function fillWalkInfomations (evac) {
+  $('#walkInfomation').text(`${evac.forAddress} - walk length: ${evac.length} steps`)
 }
 
 function moveMarker (latlng) {
