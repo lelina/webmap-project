@@ -6,6 +6,7 @@ services:
     working_dir: /home/node/app
     environment:
       - NODE_ENV=production
+      - NPM_CONFIG_PREFIX=/home/node/.npm-global
     volumes:
       - ./:/home/node/app
     ports:

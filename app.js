@@ -12,6 +12,7 @@ const DriveEvac = require('./models/drive_evac')
 const WalkEvac = require('./models/walk_evac')
 
 const DEBUG = process.env.DEBUG
+const PORT = process.env.PORT
 
 let app = express()
 
@@ -203,7 +204,7 @@ async function startApp () {
 
   await Promise.all([gatherWalks, gatherDrives])
 
-  app.listen(8000, () => console.log('Server started at http://localhost:8000'))
+  app.listen(PORT, () => console.log('Server started at http://localhost:' + PORT))
 
 }
 
